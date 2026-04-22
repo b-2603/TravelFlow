@@ -14,6 +14,7 @@ class Tour extends BaseModel
         'description',
         'destination',
         'category',
+        'pinned',
         'duration_days',
         'max_pax',
         'price_per_person',
@@ -34,6 +35,7 @@ class Tour extends BaseModel
     ];
 
     protected $casts = [
+        'pinned' => 'boolean',
         'duration_days' => 'integer',
         'max_pax' => 'integer',
         'price_per_person' => 'float',

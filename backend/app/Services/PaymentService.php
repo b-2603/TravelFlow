@@ -6,8 +6,10 @@ use Illuminate\Support\Str;
 
 class PaymentService
 {
-    public function createReference(): string
+    public function createReference(string $prefix = 'PAY'): string
     {
-        return 'PAY-'.Str::upper(Str::random(12));
+        $prefix = trim($prefix) !== '' ? trim($prefix) : 'PAY';
+
+        return Str::upper($prefix).'-'.Str::upper(Str::random(12));
     }
 }

@@ -22,6 +22,12 @@ class RefundRequest extends BaseModel
         'policy_snapshot',
         'status',
         'admin_note',
+        'refunded_amount',
+        'refunded_at',
+        'refund_to_method',
+        'refund_to_bank_name',
+        'refund_to_account_number',
+        'refund_to_account_name',
     ];
 
     protected $casts = [
@@ -31,6 +37,8 @@ class RefundRequest extends BaseModel
         'days_before_departure' => 'integer',
         'processing_days' => 'array',
         'policy_snapshot' => 'array',
+        'refunded_amount' => 'float',
+        'refunded_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

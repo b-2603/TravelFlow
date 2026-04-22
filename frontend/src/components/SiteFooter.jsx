@@ -10,8 +10,8 @@ export default function SiteFooter() {
   return (
     <footer className="tf-footer mt-auto pt-5 pb-4">
       <div className="container">
-        <div className="row g-4 align-items-start">
-          <div className="col-lg-4">
+        <div className="row g-4 align-items-start tf-footer-grid">
+          <div className="col-lg-4 tf-footer-col">
             <div className="d-flex align-items-center gap-3 mb-3">
               <div className="tf-brand-mark">T</div>
               <div>
@@ -24,7 +24,7 @@ export default function SiteFooter() {
             </p>
           </div>
 
-          <div className="col-sm-6 col-lg-2">
+          <div className="col-sm-6 col-lg-2 tf-footer-col">
             <h6 className="text-uppercase small fw-bold mb-3">Khám phá</h6>
             <div className="d-grid gap-2 small">
               <Link className="tf-footer-link" to="/">Trang chủ</Link>
@@ -34,7 +34,7 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          <div className="col-sm-6 col-lg-3">
+          <div className="col-sm-6 col-lg-3 tf-footer-col">
             <h6 className="text-uppercase small fw-bold mb-3">Hỗ trợ khách hàng</h6>
             <div className="d-grid gap-2 small">
               {isCustomer ? (
@@ -52,12 +52,12 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          <div className="col-lg-3">
+          <div className="col-lg-3 tf-footer-col">
             <h6 className="text-uppercase small fw-bold mb-3">Liên hệ</h6>
             <div className="small text-white-50 d-grid gap-2">
               <span>Hotline: 1900 6868</span>
               <span>Email: hello@travelflow.local</span>
-              <span>Văn phòng: 27 Nguyễn Huệ, Quận 1, TP.HCM</span>
+              <span>Văn phòng: 54 Tô Ngọc Vân, Thạnh Xuân, Quận 12, TpHCM</span>
             </div>
           </div>
         </div>

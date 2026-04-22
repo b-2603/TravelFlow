@@ -58,6 +58,10 @@ export const authAPI = {
   resetPassword: (payload) => api.post('/auth/reset-password', payload),
 };
 
+export const systemAPI = {
+  paymentSettings: () => api.get('/settings/payment'),
+};
+
 export const userAPI = {
   profile: () => api.get('/profile'),
   updateProfile: (payload) => {
@@ -96,6 +100,7 @@ export const bookingAPI = {
   document: (id) => api.get(`/bookings/${id}/document`, { responseType: 'blob' }),
   cancelPreview: (id) => api.get(`/bookings/${id}/cancel-preview`),
   create: (payload) => api.post('/bookings', payload),
+  update: (id, payload) => api.put(`/bookings/${id}`, payload),
   cancel: (id, payload) => api.post(`/bookings/${id}/cancel`, payload),
   adminList: (params) => api.get('/admin/bookings', { params }),
   confirm: (id) => api.post(`/admin/bookings/${id}/confirm`),
@@ -109,11 +114,12 @@ export const paymentAPI = {
   list: (params) => api.get('/payments', { params }),
   create: (payload) => api.post('/payments', payload),
   detail: (id) => api.get(`/payments/${id}`),
-  confirm: (id) => api.post(`/payments/${id}/confirm`),
-  refund: (id) => api.post(`/payments/${id}/refund`),
+  confirm: (id, payload) => api.post(`/payments/${id}/confirm`, payload),
+  customerConfirm: (id) => api.post(`/payments/${id}/customer-confirm`),
   refundRequests: (params) => api.get('/accountant/refund-requests', { params }),
   approveRefund: (id, payload) => api.post(`/accountant/refund-requests/${id}/approve`, payload),
   rejectRefund: (id, payload) => api.post(`/accountant/refund-requests/${id}/reject`, payload),
+  markRefunded: (id, payload) => api.post(`/accountant/refund-requests/${id}/refunded`, payload),
   partnerLiabilities: () => api.get('/accountant/partner-liabilities'),
   financeReport: (params) => api.get('/accountant/reports', { params }),
   exportFinanceReport: (params) => api.get('/accountant/reports/export', { params, responseType: 'blob' }),
@@ -151,6 +157,10 @@ export const adminAPI = {
   rejectTour: (id, payload) => api.post(`/admin/tours/${id}/reject`, payload),
   assignGuide: (id, payload) => api.post(`/admin/tours/${id}/assign-guide`, payload),
   logs: (params) => api.get('/admin/logs', { params }),
+};
+
+export const accountantAPI = {
+  logs: (params) => api.get('/accountant/logs', { params }),
 };
 
 export const guideAPI = {

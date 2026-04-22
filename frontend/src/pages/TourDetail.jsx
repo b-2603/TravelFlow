@@ -346,7 +346,7 @@ export default function TourDetail() {
         </div>
 
         <div className="col-lg-4">
-          <div className="sticky-top rounded-4 border bg-white p-4 shadow-sm" style={{ top: '96px' }}>
+          <div className="sticky-top rounded-4 border bg-white p-4 shadow-sm tf-responsive-sticky" style={{ top: '96px' }}>
             <div className="small text-uppercase text-muted mb-2">Giá mỗi khách</div>
             <div className="display-6 mb-3 fw-semibold text-primary">
               {formatCurrency(chosenDeparture?.price_override || tour.price_per_person)}

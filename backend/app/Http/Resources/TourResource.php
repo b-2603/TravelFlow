@@ -35,6 +35,7 @@ class TourResource extends JsonResource
             'description' => $this->description,
             'destination' => $this->destination,
             'category' => $this->category,
+            'pinned' => (bool) ($this->pinned ?? false),
             'duration_days' => $this->duration_days,
             'max_pax' => $this->max_pax,
             'price_per_person' => $this->price_per_person,

@@ -4,6 +4,7 @@ import { Formik, Form, Field, FieldArray } from 'formik';
 import { toast } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router-dom';
 import { tourAPI } from '../../services/api';
+import FormikDateInput from '../../components/FormikDateInput';
 
 const tabs = ['basic', 'itinerary', 'departures', 'images'];
 const tabLabels = {
@@ -298,7 +299,7 @@ export default function TourForm() {
                       <tbody>
                         {values.departures.map((_, index) => (
                           <tr key={index}>
-                            <td><Field name={`departures.${index}.date`} type="date" className="form-control" /></td>
+                            <td><FormikDateInput name={`departures.${index}.date`} className="form-control" /></td>
                             <td><Field name={`departures.${index}.available_slots`} type="number" className="form-control" /></td>
                             <td><Field name={`departures.${index}.price_override`} type="number" className="form-control" /></td>
                             <td>

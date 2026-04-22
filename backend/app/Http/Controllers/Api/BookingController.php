@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingRequest;
+use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Models\ActivityLog;
 use App\Models\Booking;
@@ -117,6 +118,89 @@ class BookingController extends Controller
         return $this->apiResponse(true, new BookingResource($booking), 'Lấy chi tiết booking thành công.');
     }
 
+    public function update(UpdateBookingRequest $request, string $id)
+    {
+        $booking = Booking::with(['tour', 'payments'])->find($id);
+
+        if (! $booking) {
+            return $this->apiResponse(false, null, 'Không tìm thấy booking.', 404);
+        }
+
+        if ((string) $booking->user_id !== (string) $request->user()->_id) {
+            return $this->apiResponse(false, null, 'Bạn không có quyền chỉnh sửa booking này.', 403);
+        }
+
+        if (in_array($booking->status, ['cancelled', 'completed'], true)) {
+            return $this->apiResponse(false, null, 'Booking đã hủy hoặc hoàn thành nên không thể chỉnh sửa.', 422);
+        }
+
+        $paidTotal = (float) Payment::where('booking_id', $booking->_id)->where('status', 'success')->sum('amount');
+        if ($paidTotal > 0 || in_array($booking->payment_status, ['partial', 'paid'], true)) {
+            return $this->apiResponse(false, null, 'Booking đã phát sinh thanh toán nên không thể chỉnh sửa hành khách.', 422);
+        }
+
+        // Only allow edits while still pending (before staff confirmation).
+        if ($booking->status !== 'pending') {
+            return $this->apiResponse(false, null, 'Chỉ có thể chỉnh sửa khi booking đang ở trạng thái chờ xác nhận.', 422);
+        }
+
+        $tour = $booking->tour;
+        if (! $tour) {
+            $tour = Tour::find($booking->tour_id);
+        }
+
+        if (! $tour) {
+            return $this->apiResponse(false, null, 'Không tìm thấy tour của booking.', 404);
+        }
+
+        $passengers = $request->input('passengers', []);
+        $newPax = count($passengers);
+        $oldPax = (int) ($booking->num_pax ?? 0);
+        $departureDate = optional($booking->departure_date)->toDateString();
+
+        if (! $departureDate) {
+            return $this->apiResponse(false, null, 'Booking thiếu ngày đi nên không thể chỉnh sửa.', 422);
+        }
+
+        $diff = $newPax - $oldPax;
+        if ($diff > 0) {
+            // Need extra slots.
+            $this->departureService->decrementSlots($tour, $departureDate, $diff);
+        } elseif ($diff < 0) {
+            // Return unused slots.
+            $this->departureService->incrementSlots($tour, $departureDate, abs($diff));
+        }
+
+        // Recompute total price based on the tour's selected departure price (if any).
+        $selectedDeparture = collect($tour->departures ?? [])->firstWhere('date', $departureDate);
+        $unitPrice = $selectedDeparture['price_override'] ?? $tour->price_per_person;
+        $booking->total_price = (float) $unitPrice * $newPax;
+        $booking->num_pax = $newPax;
+        $booking->passengers = $passengers;
+        $booking->note = $request->input('note');
+
+        // Clear pending payments because the amount/content may no longer match after editing.
+        Payment::where('booking_id', $booking->_id)->where('status', 'pending')->delete();
+        $booking->payment_status = 'unpaid';
+
+        $booking->save();
+
+        ActivityLog::create([
+            'user_id' => $request->user()->_id,
+            'action' => 'booking_updated_by_customer',
+            'module' => 'bookings',
+            'detail' => ['booking_id' => (string) $booking->_id],
+            'ip_address' => $request->ip(),
+            'created_at' => Carbon::now(),
+        ]);
+
+        return $this->apiResponse(
+            true,
+            new BookingResource($booking->load(['tour', 'user', 'assignedAgent', 'payments', 'review', 'refundRequests', 'supportTickets.handledBy'])),
+            'Đã cập nhật booking. Vui lòng tạo lại yêu cầu thanh toán theo lựa chọn của bạn.'
+        );
+    }
+
     public function document(Request $request, string $id)
     {
         $booking = Booking::with(['tour', 'user', 'assignedAgent', 'payments'])->find($id);
@@ -171,8 +255,9 @@ class BookingController extends Controller
     {
         $request->validate([
             'reason' => ['required', 'string', 'min:10', 'max:2000'],
-            'preferred_resolution' => ['required', 'in:cash_refund,reschedule,change_tour,voucher'],
-            'resolution_note' => ['nullable', 'string', 'max:500'],
+            'refund_to_bank_name' => ['nullable', 'string', 'max:120'],
+            'refund_to_account_number' => ['nullable', 'string', 'max:80'],
+            'refund_to_account_name' => ['nullable', 'string', 'max:120'],
         ]);
 
         $booking = Booking::with(['tour', 'payments', 'refundRequests'])->find($id);
@@ -199,7 +284,13 @@ class BookingController extends Controller
 
         $policy = $this->getCancellationPolicy();
         $preview = $this->buildCancellationPreview($booking, $policy);
-        $preferredResolution = $request->string('preferred_resolution')->toString();
+        $preferredResolution = 'cash_refund';
+
+        if (($preview['refund_amount'] ?? 0) > 0) {
+            if (! $request->filled('refund_to_bank_name') || ! $request->filled('refund_to_account_number') || ! $request->filled('refund_to_account_name')) {
+                return $this->apiResponse(false, null, 'Vui lòng nhập đầy đủ thông tin nhận hoàn tiền (ngân hàng, số tài khoản, chủ tài khoản).', 422);
+            }
+        }
 
         $booking->status = 'cancelled';
 
@@ -215,9 +306,9 @@ class BookingController extends Controller
             'user_id' => $booking->user_id,
             'booking_id' => $booking->_id,
             'reason' => $request->string('reason')->toString(),
-            'amount_requested' => $preferredResolution === 'cash_refund' ? $preview['refund_amount'] : 0,
+            'amount_requested' => $preview['refund_amount'],
             'preferred_resolution' => $preferredResolution,
-            'resolution_note' => $request->input('resolution_note'),
+            'resolution_note' => null,
             'refund_rate' => $preview['refund_rate'],
             'fee_amount' => $preview['fee_amount'],
             'days_before_departure' => $preview['days_before_departure'],
@@ -225,6 +316,10 @@ class BookingController extends Controller
             'policy_snapshot' => $preview['policy_rule'],
             'status' => 'pending',
             'admin_note' => $this->buildResolutionNote($preferredResolution, $preview),
+            'refund_to_method' => 'bank',
+            'refund_to_bank_name' => $request->input('refund_to_bank_name'),
+            'refund_to_account_number' => $request->input('refund_to_account_number'),
+            'refund_to_account_name' => $request->input('refund_to_account_name'),
         ]);
 
         $booking->save();
@@ -238,6 +333,7 @@ class BookingController extends Controller
                 'refund_rate' => $preview['refund_rate'],
                 'refundable_amount' => $preview['refund_amount'],
                 'preferred_resolution' => $preferredResolution,
+                'refund_to_bank_name' => $request->input('refund_to_bank_name'),
             ],
             'ip_address' => $request->ip(),
             'created_at' => Carbon::now(),
@@ -295,6 +391,10 @@ class BookingController extends Controller
 
         if ($booking->status !== 'pending') {
             return $this->apiResponse(false, null, 'Chỉ có thể duyệt booking đang chờ xác nhận.', 422);
+        }
+
+        if (! in_array($booking->payment_status, ['partial', 'paid'], true)) {
+            return $this->apiResponse(false, null, 'Chỉ có thể duyệt booking đã có thanh toán được xác nhận.', 422);
         }
 
         $booking->status = 'confirmed';
@@ -413,7 +513,7 @@ class BookingController extends Controller
     private function buildResolutionNote(string $preferredResolution, array $preview): string
     {
         return match ($preferredResolution) {
-            'cash_refund' => sprintf('Khách chọn hoàn tiền mặt. Hoàn dự kiến %.0f%%, phí hủy %.0f%%.', $preview['refund_rate'] * 100, $preview['fee_rate'] * 100),
+            'cash_refund' => sprintf('Khách hủy tour. Hoàn dự kiến %.0f%%, phí hủy %.0f%%.', $preview['refund_rate'] * 100, $preview['fee_rate'] * 100),
             'reschedule' => 'Khách chọn dời ngày khởi hành 1 lần miễn phí.',
             'change_tour' => 'Khách chọn đổi sang tour tương đương.',
             'voucher' => 'Khách chọn nhận voucher bảo lưu.',

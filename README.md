@@ -52,6 +52,19 @@ Giá trị chính:
 - API URL frontend: `http://localhost:8000/api`
 - MongoDB: `mongodb://127.0.0.1:27017`
 
+## Thanh toán chuyển khoản tự động (webhook)
+
+Trong thực tế, để hệ thống tự đổi trạng thái sau khi khách chuyển khoản, cần tích hợp dịch vụ đối soát giao dịch/cổng thanh toán có **webhook** (thay vì để khách bấm "Tôi đã chuyển khoản").
+
+Backend đã chuẩn bị endpoint webhook:
+- `POST /api/webhooks/bank-transfer`
+- Payload mẫu: `{ "reference": "PAY-XXXXXXXXXXXX", "amount": 2000, "paid_at": "2026-04-18T12:34:56+07:00" }`
+- Hoặc có thể chỉ cần `description/content` chứa mã `PAY-...` (ví dụ: `BOOKING PAY-...`) + `amount` (webhook sẽ tự bóc mã `PAY-...` từ nội dung).
+- Nếu cấu hình `BANK_TRANSFER_WEBHOOK_SECRET` thì gửi kèm header `X-Webhook-Secret` (hoặc field `secret`) để xác thực.
+
+Lưu ý khi chạy local:
+- Webhook là hệ thống **ngân hàng/dịch vụ** gọi về server của bạn, nên muốn test thực tế cần URL public (ví dụ dùng ngrok/cloudflared) hoặc gọi thử thủ công bằng Postman/curl.
+
 ## Cách chạy
 
 ### Cách nhanh nhất

@@ -26,9 +26,9 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg tf-public-navbar sticky-top">
       <div className="container py-2">
-        <Link className="navbar-brand d-flex align-items-center gap-3 fw-bold" to="/">
+        <Link className="navbar-brand d-flex align-items-center gap-3 fw-bold tf-navbar-brand" to="/">
           <span className="tf-brand-mark">T</span>
-          <span>
+          <span className="tf-navbar-brand-copy">
             TravelFlow
             <span className="d-block small fw-normal text-muted">Du lịch sống động và quản lý mượt mà</span>
           </span>
@@ -66,7 +66,7 @@ export default function Navbar() {
             )}
           </ul>
 
-          <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2">
+          <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 tf-navbar-actions">
             {isAuthenticated ? (
               <>
                 {isCustomerView ? (

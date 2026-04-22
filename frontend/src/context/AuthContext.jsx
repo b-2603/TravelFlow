@@ -67,7 +67,10 @@ export function AuthProvider({ children }) {
 
       return nextUser;
     } catch (error) {
-      clearAuth();
+      const status = error?.response?.status;
+      if (status === 401) {
+        clearAuth();
+      }
       throw error;
     }
   };
@@ -119,8 +122,9 @@ export function AuthProvider({ children }) {
         if (mounted && nextUser) {
           persistAuth(token, nextUser);
         }
-      } catch {
-        if (mounted) {
+      } catch (error) {
+        const status = error?.response?.status;
+        if (mounted && status === 401) {
           clearAuth();
         }
       } finally {

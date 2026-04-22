@@ -30,6 +30,12 @@ export default function Dashboard() {
     logo: '',
     address: '',
     hotline: '',
+    bank_name: '',
+    bank_code: '',
+    bank_account_number: '',
+    bank_account_name: '',
+    bank_branch: '',
+    payment_note_prefix: '',
     cancellation_policy: '',
     payment_methods: ['bank', 'momo', 'vnpay'],
     featured_destinations: [],
@@ -70,6 +76,12 @@ export default function Dashboard() {
         logo: payload.logo || '',
         address: payload.address || '',
         hotline: payload.hotline || '',
+        bank_name: payload.bank_name || '',
+        bank_code: payload.bank_code || '',
+        bank_account_number: payload.bank_account_number || '',
+        bank_account_name: payload.bank_account_name || '',
+        bank_branch: payload.bank_branch || '',
+        payment_note_prefix: payload.payment_note_prefix || '',
         cancellation_policy: payload.cancellation_policy || '',
         payment_methods: payload.payment_methods || ['bank', 'momo', 'vnpay'],
         featured_destinations: payload.featured_destinations || [],
@@ -354,6 +366,42 @@ export default function Dashboard() {
           <div className="col-md-6">
             <label className="form-label">Địa chỉ</label>
             <input className="form-control" value={settingsForm.address} onChange={(e) => setSettingsForm((v) => ({ ...v, address: e.target.value }))} />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Ngân hàng</label>
+            <input className="form-control" value={settingsForm.bank_name} onChange={(e) => setSettingsForm((v) => ({ ...v, bank_name: e.target.value }))} />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Mã ngân hàng (VD: VCB)</label>
+            <input className="form-control" value={settingsForm.bank_code} onChange={(e) => setSettingsForm((v) => ({ ...v, bank_code: e.target.value }))} />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Số tài khoản</label>
+            <input
+              className="form-control"
+              value={settingsForm.bank_account_number}
+              onChange={(e) => setSettingsForm((v) => ({ ...v, bank_account_number: e.target.value }))}
+            />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Chủ tài khoản</label>
+            <input
+              className="form-control"
+              value={settingsForm.bank_account_name}
+              onChange={(e) => setSettingsForm((v) => ({ ...v, bank_account_name: e.target.value }))}
+            />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Chi nhánh</label>
+            <input className="form-control" value={settingsForm.bank_branch} onChange={(e) => setSettingsForm((v) => ({ ...v, bank_branch: e.target.value }))} />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Tiền tố nội dung chuyển khoản</label>
+            <input
+              className="form-control"
+              value={settingsForm.payment_note_prefix}
+              onChange={(e) => setSettingsForm((v) => ({ ...v, payment_note_prefix: e.target.value }))}
+            />
           </div>
           <div className="col-md-6">
             <label className="form-label">Điểm đến nổi bật</label>

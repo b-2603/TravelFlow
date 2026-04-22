@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminAPI } from '../../services/api';
 import { formatDate } from '../../utils/formatters';
+import DateInput from '../../components/DateInput';
 
 export default function ActivityLog() {
   const [filters, setFilters] = useState({ user: '', module: '', date: '' });
@@ -58,7 +59,11 @@ export default function ActivityLog() {
           </select>
         </div>
         <div className="col-md-4">
-          <input type="date" className="form-control" value={filters.date} onChange={(e) => setFilters((v) => ({ ...v, date: e.target.value }))} />
+          <DateInput
+            className="form-control"
+            value={filters.date}
+            onChange={(value) => setFilters((v) => ({ ...v, date: value }))}
+          />
         </div>
       </div>
 

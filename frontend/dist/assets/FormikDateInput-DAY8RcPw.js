@@ -1,0 +1,1 @@
+import{j as s}from"./index-D_0udbN-.js";import{u as a}from"./formik.esm-ot1y084Q.js";import{D as n}from"./DateInput-DwdFXrxF.js";function m({name:e,...o}){const[r,,t]=a(e);return s.jsx(n,{...o,name:e,value:r.value,onChange:u=>t.setValue(u),onBlur:()=>t.setTouched(!0)})}export{m as F};

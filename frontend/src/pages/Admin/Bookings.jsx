@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { bookingAPI } from '../../services/api';
-import { formatCurrency, formatDate, statusBadgeClass } from '../../utils/formatters';
+import { bookingStatusLabel, formatCurrency, formatDate, paymentStatusLabel, statusBadgeClass } from '../../utils/formatters';
 
 export default function AdminBookings() {
   const queryClient = useQueryClient();
@@ -60,6 +60,7 @@ export default function AdminBookings() {
           <select className="form-select" value={filters.payment_status} onChange={(e) => setFilters((v) => ({ ...v, payment_status: e.target.value }))}>
             <option value="">Tất cả trạng thái thanh toán</option>
             <option value="unpaid">Chưa thanh toán</option>
+            <option value="pending">Chờ xác nhận chuyển khoản</option>
             <option value="partial">Thanh toán một phần</option>
             <option value="paid">Đã thanh toán</option>
           </select>
@@ -86,8 +87,8 @@ export default function AdminBookings() {
                 <td>{booking.user?.name || '--'}</td>
                 <td>{formatDate(booking.departure_date)}</td>
                 <td>{formatCurrency(booking.total_price)}</td>
-                <td><span className={`badge ${statusBadgeClass(booking.status)}`}>{booking.status}</span></td>
-                <td><span className={`badge ${statusBadgeClass(booking.payment_status)}`}>{booking.payment_status}</span></td>
+                <td><span className={`badge ${statusBadgeClass(booking.status)}`}>{bookingStatusLabel(booking.status)}</span></td>
+                <td><span className={`badge ${statusBadgeClass(booking.payment_status)}`}>{paymentStatusLabel(booking.payment_status)}</span></td>
                 <td>
                   <div className="d-flex flex-wrap gap-2">
                     {booking.status === 'pending' && (

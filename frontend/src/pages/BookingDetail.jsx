@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import { bookingAPI, customerAPI } from '../services/api';
 import {
   bookingStatusLabel,
+  bookingPaymentBadgeClass,
+  bookingPaymentLabel,
   formatCurrency,
   formatDate,
   paymentStatusLabel,
@@ -91,6 +93,15 @@ export default function BookingDetail() {
   }
 
   const latestRefund = booking.refund_requests?.[0];
+  const pendingPayments = (booking.payments || []).filter((payment) => ['pending', 'submitted'].includes(payment.status));
+  const paidAmount = (booking.payments || [])
+    .filter((payment) => payment.status === 'success')
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const refundedAmount = (booking.payments || [])
+    .filter((payment) => payment.status === 'refunded')
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const netPaidAmount = Math.max(paidAmount - refundedAmount, 0);
+  const remainingAmount = Math.max(Number(booking.total_price || 0) - netPaidAmount, 0);
 
   return (
     <div className="container py-4 py-lg-5">
@@ -104,7 +115,7 @@ export default function BookingDetail() {
               </div>
               <div className="d-flex flex-column gap-2 align-items-start align-items-md-end">
                 <span className={`badge ${statusBadgeClass(booking.status)}`}>{bookingStatusLabel(booking.status)}</span>
-                <span className={`badge ${statusBadgeClass(booking.payment_status)}`}>{paymentStatusLabel(booking.payment_status)}</span>
+                <span className={`badge ${bookingPaymentBadgeClass(booking)}`}>{bookingPaymentLabel(booking)}</span>
               </div>
             </div>
 
@@ -238,9 +249,17 @@ export default function BookingDetail() {
               <span>Tổng tiền</span>
               <strong>{formatCurrency(booking.total_price)}</strong>
             </div>
+            <div className="mb-3 d-flex justify-content-between">
+              <span>Đã thanh toán</span>
+              <strong>{formatCurrency(paidAmount)}</strong>
+            </div>
+            <div className="mb-4 d-flex justify-content-between">
+              <span>Còn lại</span>
+              <strong className="text-danger">{formatCurrency(remainingAmount)}</strong>
+            </div>
             <div className="mb-4 d-flex justify-content-between">
               <span>Trạng thái thanh toán</span>
-              <span className={`badge ${statusBadgeClass(booking.payment_status)}`}>{paymentStatusLabel(booking.payment_status)}</span>
+              <span className={`badge ${bookingPaymentBadgeClass(booking)}`}>{bookingPaymentLabel(booking)}</span>
             </div>
 
             {booking.payments?.length > 0 ? (
@@ -258,7 +277,18 @@ export default function BookingDetail() {
               <div className="alert alert-light border">Chưa có giao dịch thanh toán nào.</div>
             )}
 
+            {pendingPayments.length > 0 && (
+              <div className="alert alert-warning py-2">
+                Đã có {pendingPayments.length} giao dịch đang chờ đối soát. Trạng thái chỉ chuyển sang đã thanh toán sau khi hệ thống xác nhận nhận tiền.
+              </div>
+            )}
+
             <div className="d-grid gap-2">
+              {remainingAmount > 0 && (
+                <Link to={`/payments/${booking.id}`} className="btn btn-primary">
+                  Mở mã QR thanh toán
+                </Link>
+              )}
               <button type="button" className="btn btn-primary" disabled={documentMutation.isPending} onClick={() => documentMutation.mutate()}>
                 {documentMutation.isPending ? 'Đang tải...' : 'Tải hóa đơn / chứng từ PDF'}
               </button>

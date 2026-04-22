@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import FavoriteButton from '../components/FavoriteButton';
+import DateInput from '../components/DateInput';
 import { useTours } from '../hooks/useTours';
 import { formatCurrency } from '../utils/formatters';
 
@@ -62,11 +63,10 @@ function HeroSearch({ filters, onChange, onSubmit }) {
       </div>
       <div className="col-md-4">
         <label className="form-label fw-semibold">Ngày khởi hành</label>
-        <input
-          type="date"
+        <DateInput
           className="form-control form-control-lg rounded-pill"
           value={filters.date}
-          onChange={(event) => onChange('date', event.target.value)}
+          onChange={(value) => onChange('date', value)}
         />
       </div>
       <div className="col-md-2">
@@ -111,9 +111,8 @@ export default function Home() {
             {slides.map((slide, index) => (
               <div key={slide.title} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
                 <div
-                  className="position-relative"
+                  className="position-relative tf-home-hero-slide"
                   style={{
-                    minHeight: '33rem',
                     backgroundImage: `linear-gradient(115deg, rgba(8, 27, 46, 0.82), rgba(8, 27, 46, 0.28)), url(${slide.image})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',

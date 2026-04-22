@@ -6,41 +6,28 @@ import {
   formatCurrency,
   formatDate,
   paymentStatusLabel,
-  refundStatusLabel,
   statusBadgeClass,
 } from '../../utils/formatters';
-
-const refundFilters = [
-  { label: 'Tất cả', value: '' },
-  { label: 'Chờ duyệt', value: 'pending' },
-  { label: 'Đã duyệt', value: 'approved' },
-  { label: 'Từ chối', value: 'rejected' },
-];
 
 export default function Payments() {
   const queryClient = useQueryClient();
   const [month, setMonth] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
   const [method, setMethod] = useState('');
-  const [refundStatus, setRefundStatus] = useState('');
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [selectedRefund, setSelectedRefund] = useState(null);
-  const [refundNote, setRefundNote] = useState('');
+  const [bookingId, setBookingId] = useState('');
+  const [transactionId, setTransactionId] = useState('');
+  const [confirmPayment, setConfirmPayment] = useState(null);
+  const [confirmForm, setConfirmForm] = useState({ bank_transaction_id: '', paid_at: '', amount: '', accountant_note: '' });
 
   const paymentParams = useMemo(
     () => ({
       ...(month ? { month } : {}),
       ...(paymentStatus ? { status: paymentStatus } : {}),
       ...(method ? { method } : {}),
+      ...(bookingId ? { booking_id: bookingId } : {}),
+      ...(transactionId ? { transaction_id: transactionId } : {}),
     }),
-    [month, paymentStatus, method],
-  );
-
-  const refundParams = useMemo(
-    () => ({
-      ...(refundStatus ? { status: refundStatus } : {}),
-    }),
-    [refundStatus],
+    [month, paymentStatus, method, bookingId, transactionId],
   );
 
   const { data: paymentsPayload, isLoading: paymentsLoading } = useQuery({
@@ -48,68 +35,25 @@ export default function Payments() {
     queryFn: async () => (await paymentAPI.list(paymentParams)).data?.data ?? {},
   });
 
-  const { data: refundPayload, isLoading: refundsLoading } = useQuery({
-    queryKey: ['accountant-refunds', refundParams],
-    queryFn: async () => (await paymentAPI.refundRequests(refundParams)).data?.data ?? {},
-  });
-
   const payments = paymentsPayload?.items || [];
   const paymentSummary = paymentsPayload?.summary || {};
-  const refunds = refundPayload?.items || [];
 
   const refreshData = () => {
     queryClient.invalidateQueries({ queryKey: ['payments'] });
-    queryClient.invalidateQueries({ queryKey: ['accountant-refunds'] });
     queryClient.invalidateQueries({ queryKey: ['accountant-report'] });
     queryClient.invalidateQueries({ queryKey: ['partner-liabilities'] });
   };
 
   const confirmMutation = useMutation({
-    mutationFn: (id) => paymentAPI.confirm(id),
+    mutationFn: ({ id, payload }) => paymentAPI.confirm(id, payload),
     onSuccess: () => {
       toast.success('Đã xác nhận thanh toán.');
+      setConfirmPayment(null);
+      setConfirmForm({ bank_transaction_id: '', paid_at: '', amount: '', accountant_note: '' });
       refreshData();
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Không thể xác nhận thanh toán.');
-    },
-  });
-
-  const refundMutation = useMutation({
-    mutationFn: (id) => paymentAPI.refund(id),
-    onSuccess: () => {
-      toast.success('Đã hoàn tiền giao dịch.');
-      setSelectedPayment(null);
-      refreshData();
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Không thể hoàn tiền.');
-    },
-  });
-
-  const approveRefundMutation = useMutation({
-    mutationFn: ({ id, note }) => paymentAPI.approveRefund(id, { admin_note: note }),
-    onSuccess: () => {
-      toast.success('Đã duyệt yêu cầu hoàn tiền.');
-      setSelectedRefund(null);
-      setRefundNote('');
-      refreshData();
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Không thể duyệt yêu cầu hoàn tiền.');
-    },
-  });
-
-  const rejectRefundMutation = useMutation({
-    mutationFn: ({ id, note }) => paymentAPI.rejectRefund(id, { admin_note: note }),
-    onSuccess: () => {
-      toast.success('Đã từ chối yêu cầu hoàn tiền.');
-      setSelectedRefund(null);
-      setRefundNote('');
-      refreshData();
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Không thể từ chối yêu cầu hoàn tiền.');
     },
   });
 
@@ -140,6 +84,7 @@ export default function Payments() {
               <select className="form-select" value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value)}>
                 <option value="">Tất cả</option>
                 <option value="pending">Đang xử lý</option>
+                <option value="submitted">Khách đã báo chuyển</option>
                 <option value="success">Thành công</option>
                 <option value="failed">Thất bại</option>
                 <option value="refunded">Đã hoàn tiền</option>
@@ -154,6 +99,14 @@ export default function Payments() {
                 <option value="momo">MoMo</option>
                 <option value="vnpay">VNPay</option>
               </select>
+            </div>
+            <div className="col-sm-auto">
+              <label className="form-label">Booking</label>
+              <input className="form-control" value={bookingId} onChange={(e) => setBookingId(e.target.value)} placeholder="ID booking" />
+            </div>
+            <div className="col-sm-auto">
+              <label className="form-label">Mã tham chiếu</label>
+              <input className="form-control" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} placeholder="PAY-..." />
             </div>
           </div>
         </div>
@@ -212,27 +165,26 @@ export default function Payments() {
                     <td>{formatDate(payment.paid_at || payment.created_at)}</td>
                     <td>
                       <div className="d-flex flex-wrap gap-2">
-                        {payment.status === 'pending' && (
+                        {['pending', 'submitted'].includes(payment.status) && (
                           <button
                             type="button"
                             className="btn btn-success btn-sm"
-                            disabled={confirmMutation.isPending}
-                            onClick={() => confirmMutation.mutate(payment.id)}
+                            data-bs-toggle="modal"
+                            data-bs-target="#paymentConfirmModal"
+                            onClick={() => {
+                              setConfirmPayment(payment);
+                              setConfirmForm({
+                                bank_transaction_id: '',
+                                paid_at: '',
+                                amount: String(payment.amount || ''),
+                                accountant_note: '',
+                              });
+                            }}
                           >
                             Xác nhận
                           </button>
                         )}
-                        {payment.status === 'success' && (
-                          <button
-                            type="button"
-                            className="btn btn-outline-danger btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#paymentRefundModal"
-                            onClick={() => setSelectedPayment(payment)}
-                          >
-                            Hoàn tiền
-                          </button>
-                        )}
+                        {payment.status === 'success' ? <span className="small text-muted">--</span> : null}
                       </div>
                     </td>
                   </tr>
@@ -243,184 +195,84 @@ export default function Payments() {
         </div>
       </section>
 
-      <section className="rounded-4 border bg-white p-4 shadow-sm">
-        <div className="mb-4 d-flex flex-column gap-3 flex-lg-row justify-content-between">
-          <div>
-            <h3 className="h5 mb-1">Yêu cầu hoàn tiền từ khách hàng</h3>
-            <p className="mb-0 text-muted">
-              Kiểm tra lý do hủy, số tiền đề nghị hoàn và phản hồi để đồng bộ với booking, payment.
-            </p>
-          </div>
-          <div className="d-flex gap-2">
-            {refundFilters.map((filter) => (
-              <button
-                key={filter.value || 'all'}
-                type="button"
-                className={`btn btn-sm ${refundStatus === filter.value ? 'btn-primary' : 'btn-outline-primary'}`}
-                onClick={() => setRefundStatus(filter.value)}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="table-responsive">
-          <table className="table align-middle mb-0">
-            <thead>
-              <tr>
-                <th>Khách hàng</th>
-                <th>Tour</th>
-                <th>Số tiền yêu cầu</th>
-                <th>Lý do</th>
-                <th>Trạng thái</th>
-                <th>Ngày gửi</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {refundsLoading ? (
-                <tr>
-                  <td colSpan="7" className="py-4 text-center text-muted">
-                    Đang tải yêu cầu hoàn tiền...
-                  </td>
-                </tr>
-              ) : refunds.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="py-4 text-center text-muted">
-                    Chưa có yêu cầu hoàn tiền nào.
-                  </td>
-                </tr>
-              ) : (
-                refunds.map((refund) => (
-                  <tr key={refund.id}>
-                    <td>{refund.booking?.user?.name || '--'}</td>
-                    <td>{refund.booking?.tour?.title || '--'}</td>
-                    <td>{formatCurrency(refund.amount_requested)}</td>
-                    <td style={{ minWidth: 220 }}>{refund.reason || '--'}</td>
-                    <td>
-                      <span className={`badge ${statusBadgeClass(refund.status)}`}>
-                        {refundStatusLabel(refund.status)}
-                      </span>
-                    </td>
-                    <td>{formatDate(refund.created_at)}</td>
-                    <td>
-                      {refund.status === 'pending' ? (
-                        <button
-                          type="button"
-                          className="btn btn-outline-success btn-sm"
-                          data-bs-toggle="modal"
-                          data-bs-target="#refundRequestModal"
-                          onClick={() => {
-                            setSelectedRefund(refund);
-                            setRefundNote(refund.admin_note || '');
-                          }}
-                        >
-                          Xử lý
-                        </button>
-                      ) : (
-                        <span className="small text-muted">{refund.admin_note || 'Đã có kết quả xử lý'}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <div className="modal fade" id="paymentRefundModal" tabIndex="-1" aria-hidden="true">
+      <div className="modal fade" id="paymentConfirmModal" tabIndex="-1" aria-hidden="true">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
             <div className="modal-header">
-              <h3 className="modal-title fs-5">Xác nhận hoàn tiền giao dịch</h3>
+              <h3 className="modal-title fs-5">Xác nhận thanh toán chuyển khoản</h3>
               <button type="button" className="btn-close" data-bs-dismiss="modal" />
             </div>
             <div className="modal-body">
-              <p className="mb-2">
-                Giao dịch: <strong>{selectedPayment?.id}</strong>
-              </p>
-              <p className="mb-0">
-                Số tiền hoàn: <strong>{formatCurrency(selectedPayment?.amount)}</strong>
-              </p>
-            </div>
-            <div className="modal-footer">
-              <button type="button" className="btn btn-light" data-bs-dismiss="modal">
-                Đóng
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                data-bs-dismiss="modal"
-                disabled={!selectedPayment || refundMutation.isPending}
-                onClick={() => selectedPayment && refundMutation.mutate(selectedPayment.id)}
-              >
-                Hoàn tiền
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="modal fade" id="refundRequestModal" tabIndex="-1" aria-hidden="true">
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3 className="modal-title fs-5">Xử lý yêu cầu hoàn tiền</h3>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" />
-            </div>
-            <div className="modal-body">
-              <div className="small text-muted mb-3">
-                {selectedRefund?.booking?.user?.name || '--'} | {selectedRefund?.booking?.tour?.title || '--'}
-              </div>
-              <div className="rounded-3 bg-light p-3 mb-3">
-                <div className="small text-muted">Số tiền đề nghị hoàn</div>
-                <div className="fw-semibold">{formatCurrency(selectedRefund?.amount_requested)}</div>
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Lý do khách hàng gửi</label>
-                <div className="form-control bg-light" style={{ minHeight: 96 }}>
-                  {selectedRefund?.reason || '--'}
+              <div className="small text-muted mb-3">Giao dịch: {confirmPayment?.id || '--'} • Booking: {confirmPayment?.booking_id || '--'}</div>
+              <div className="row g-3">
+                <div className="col-12">
+                  <label className="form-label">Số tiền xác nhận</label>
+                  <input
+                    className="form-control"
+                    value={confirmForm.amount}
+                    onChange={(e) => setConfirmForm((v) => ({ ...v, amount: e.target.value }))}
+                    placeholder="2000000"
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Mã GD ngân hàng (nếu có)</label>
+                  <input
+                    className="form-control"
+                    value={confirmForm.bank_transaction_id}
+                    onChange={(e) => setConfirmForm((v) => ({ ...v, bank_transaction_id: e.target.value }))}
+                    placeholder="BANK-TRANSACTION-ID"
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Thời gian nhận tiền (nếu có)</label>
+                  <input
+                    type="datetime-local"
+                    className="form-control"
+                    value={confirmForm.paid_at}
+                    onChange={(e) => setConfirmForm((v) => ({ ...v, paid_at: e.target.value }))}
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Ghi chú kế toán</label>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    value={confirmForm.accountant_note}
+                    onChange={(e) => setConfirmForm((v) => ({ ...v, accountant_note: e.target.value }))}
+                    placeholder="Ví dụ: đối soát theo sao kê ngày..."
+                  />
                 </div>
               </div>
-              <div>
-                <label className="form-label">Ghi chú kế toán</label>
-                <textarea
-                  className="form-control"
-                  rows="4"
-                  value={refundNote}
-                  onChange={(e) => setRefundNote(e.target.value)}
-                  placeholder="Nhập ghi chú xử lý, quyết định hoặc điều kiện hoàn tiền..."
-                />
-              </div>
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-light" data-bs-dismiss="modal">
                 Đóng
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline-danger"
-                data-bs-dismiss="modal"
-                disabled={!selectedRefund || rejectRefundMutation.isPending}
-                onClick={() => selectedRefund && rejectRefundMutation.mutate({ id: selectedRefund.id, note: refundNote })}
-              >
-                Từ chối
               </button>
               <button
                 type="button"
                 className="btn btn-success"
                 data-bs-dismiss="modal"
-                disabled={!selectedRefund || approveRefundMutation.isPending}
-                onClick={() => selectedRefund && approveRefundMutation.mutate({ id: selectedRefund.id, note: refundNote })}
+                disabled={!confirmPayment || confirmMutation.isPending}
+                onClick={() => {
+                  if (!confirmPayment) return;
+                  confirmMutation.mutate({
+                    id: confirmPayment.id,
+                    payload: {
+                      amount: confirmForm.amount ? Number(confirmForm.amount) : undefined,
+                      bank_transaction_id: confirmForm.bank_transaction_id || undefined,
+                      paid_at: confirmForm.paid_at || undefined,
+                      accountant_note: confirmForm.accountant_note || undefined,
+                    },
+                  });
+                }}
               >
-                Duyệt hoàn tiền
+                Xác nhận
               </button>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 }

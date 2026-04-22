@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import FavoriteButton from '../components/FavoriteButton';
+import DateInput from '../components/DateInput';
 import { useTours } from '../hooks/useTours';
 import { formatCurrency } from '../utils/formatters';
 
@@ -190,7 +191,11 @@ export default function TourList() {
 
               <div className="col-6 col-md-3 col-xl">
                 <label className="form-label fw-semibold">Ngày đi</label>
-                <input type="date" className="form-control rounded-pill" value={filters.date} onChange={(e) => setParam('date', e.target.value)} />
+                <DateInput
+                  className="form-control rounded-pill"
+                  value={filters.date}
+                  onChange={(value) => setParam('date', value)}
+                />
               </div>
 
               <div className="col-6 col-md-3 col-xl">

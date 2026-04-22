@@ -5,6 +5,20 @@ import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import { bookingAPI, paymentAPI } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import FormikDateInput from '../components/FormikDateInput';
+
+const PAYMENT_METHOD_OPTIONS = [
+  {
+    label: 'MoMo',
+    value: 'momo',
+    description: 'Thanh toán nhanh bằng ví MoMo, phù hợp cho người dùng điện thoại.',
+  },
+  {
+    label: 'VNPay',
+    value: 'vnpay',
+    description: 'Thanh toán qua app ngân hàng hoặc quet QR trên cổng VNPay.',
+  },
+];
 
 const schema = Yup.object({
   note: Yup.string().max(1000),
@@ -96,7 +110,7 @@ export default function Booking() {
       <Formik
         initialValues={{
           note: '',
-          payment_method: 'bank',
+          payment_method: 'momo',
           payment_scope: 'deposit',
           passengers: initialPassengers,
         }}
@@ -143,7 +157,7 @@ export default function Booking() {
                               </div>
                               <div className="col-md-4">
                                 <label className="form-label">Ngày sinh</label>
-                                <Field type="date" name={`passengers.${index}.dob`} className="form-control" />
+                                <FormikDateInput name={`passengers.${index}.dob`} className="form-control" />
                                 <div className="mt-1 small text-danger">
                                   <ErrorMessage name={`passengers.${index}.dob`} />
                                 </div>
@@ -192,15 +206,15 @@ export default function Booking() {
 
                   <div className="mb-4">
                     <label className="form-label d-block">Phương thức thanh toán</label>
+                    <div className="mb-2 small text-muted">Chọn cổng thanh toán online thông dụng để thao tác nhanh hơn.</div>
                     <div className="d-grid gap-2">
-                      {[
-                        { label: 'Chuyển khoản', value: 'bank' },
-                        { label: 'MoMo', value: 'momo' },
-                        { label: 'VNPay', value: 'vnpay' },
-                      ].map((method) => (
-                        <label key={method.value} className="d-flex align-items-center gap-2 rounded-3 border px-3 py-3">
-                          <Field type="radio" name="payment_method" value={method.value} />
-                          <span>{method.label}</span>
+                      {PAYMENT_METHOD_OPTIONS.map((method) => (
+                        <label key={method.value} className="rounded-3 border px-3 py-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <Field type="radio" name="payment_method" value={method.value} />
+                            <span>{method.label}</span>
+                          </div>
+                          <div className="mt-1 small text-muted">{method.description}</div>
                         </label>
                       ))}
                     </div>
@@ -235,7 +249,7 @@ export default function Booking() {
               </div>
 
               <div className="col-lg-4">
-                <div className="sticky-top rounded-4 border bg-white p-4 shadow-sm" style={{ top: '96px' }}>
+                <div className="sticky-top rounded-4 border bg-white p-4 shadow-sm tf-responsive-sticky" style={{ top: '96px' }}>
                   <h2 className="h5 mb-3">Tóm tắt đơn hàng</h2>
                   <div className="mb-3">
                     <div className="fw-semibold">{tour.title}</div>

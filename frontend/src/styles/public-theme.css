@@ -568,6 +568,35 @@ body {
   color: #fff;
 }
 
+.tf-navbar-brand {
+  min-width: 0;
+}
+
+.tf-navbar-brand-copy {
+  min-width: 0;
+}
+
+.tf-home-hero-slide {
+  min-height: 33rem;
+}
+
+.tf-responsive-sticky {
+  top: 96px;
+}
+
+.tf-admin-shell {
+  align-items: stretch;
+}
+
+.tf-sidebar {
+  width: var(--tf-sidebar-width, 260px);
+  min-height: 100vh;
+}
+
+.tf-sidebar-nav .nav-link {
+  white-space: nowrap;
+}
+
 .tf-subtle-grid {
   background-image:
     linear-gradient(rgba(255,255,255,0.45) 1px, transparent 1px),
@@ -609,6 +638,57 @@ body {
     opacity: 0.65;
   }
 
+  .tf-navbar-brand {
+    max-width: calc(100% - 4rem);
+  }
+
+  .tf-navbar-brand-copy {
+    white-space: normal;
+  }
+
+  .tf-navbar-actions {
+    padding-top: 0.75rem;
+  }
+
+  .tf-navbar-actions .btn,
+  .tf-navbar-actions .dropdown,
+  .tf-navbar-actions .tf-user-chip {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tf-user-chip {
+    border-radius: 1.2rem;
+  }
+
+  .tf-home-hero-slide {
+    min-height: 28rem;
+  }
+
+  .tf-admin-shell {
+    flex-direction: column;
+  }
+
+  .tf-sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .tf-sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .tf-sidebar-nav .nav-link {
+    flex: 1 1 180px;
+    text-align: center;
+  }
+
+  .tf-responsive-sticky {
+    position: static !important;
+    top: auto !important;
+  }
+
   .tf-floating-element svg {
     width: 42px;
     height: 42px;
@@ -620,6 +700,22 @@ body {
 }
 
 @media (max-width: 767.98px) {
+  .tf-public-shell main {
+    overflow-x: hidden;
+  }
+
+  .tf-home-hero-slide {
+    min-height: 23rem;
+  }
+
+  .tf-hero-card {
+    border-radius: 1.5rem;
+  }
+
+  .tf-user-meta strong {
+    font-size: 0.92rem;
+  }
+
   .tf-tour-topbar,
   .tf-filter-bar {
     padding: 1.15rem;
@@ -646,5 +742,55 @@ body {
   .tf-tour-card-footer {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .tf-tour-pagination .page-link {
+    min-width: 2.5rem;
+    padding-inline: 0.8rem;
+  }
+
+  .tf-footer-grid {
+    text-align: center;
+  }
+
+  .tf-footer-col .d-flex {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .tf-brand-mark {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 0.75rem;
+  }
+
+  .tf-home-hero-slide .display-4,
+  .tf-home-hero-slide .display-5,
+  .tf-home-hero-slide .display-6 {
+    font-size: clamp(1.9rem, 7vw, 2.4rem);
+  }
+
+  .tf-home-hero-slide .lead {
+    font-size: 1rem;
+  }
+
+  .tf-home-hero-slide .btn,
+  .tf-tour-card-footer .btn {
+    width: 100%;
+  }
+
+  .tf-card-media,
+  .tf-tour-card-media {
+    border-radius: 1.25rem 1.25rem 0 0;
+  }
+
+  .table-responsive {
+    border-radius: 1rem;
   }
 }

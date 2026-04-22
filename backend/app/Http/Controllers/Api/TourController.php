@@ -92,6 +92,11 @@ class TourController extends Controller
             default => $matchedTours->sortByDesc('created_at')->values(),
         };
 
+        // Always keep pinned tours at the top, regardless of sort mode.
+        $pinnedTours = $sortedTours->filter(fn ($tour) => (bool) ($tour->pinned ?? false));
+        $regularTours = $sortedTours->reject(fn ($tour) => (bool) ($tour->pinned ?? false));
+        $sortedTours = $pinnedTours->concat($regularTours)->values();
+
         $perPage = max(1, min(24, (int) $request->input('per_page', 9)));
         $page = max(1, (int) $request->input('page', 1));
         $total = $sortedTours->count();
@@ -152,7 +157,11 @@ class TourController extends Controller
 
     public function managerIndex(Request $request)
     {
-        $query = Tour::query()->whereNull('deleted_at')->with(['creator', 'guide'])->orderByDesc('created_at');
+        $query = Tour::query()
+            ->whereNull('deleted_at')
+            ->with(['creator', 'guide'])
+            ->orderByDesc('pinned')
+            ->orderByDesc('created_at');
 
         if ($request->user()->role !== 'admin') {
             $query->where('created_by', $request->user()->_id);

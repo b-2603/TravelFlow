@@ -15,9 +15,12 @@ const AgentBookings = lazy(() => import('./pages/Agent/Bookings'));
 const AgentCustomers = lazy(() => import('./pages/Agent/Customers'));
 const AgentCreateBooking = lazy(() => import('./pages/Agent/CreateBooking'));
 const Payments = lazy(() => import('./pages/Accountant/Payments'));
+const Refunds = lazy(() => import('./pages/Accountant/Refunds'));
+const AccountantLogs = lazy(() => import('./pages/Accountant/Logs'));
 const Reports = lazy(() => import('./pages/Accountant/Reports'));
 const Booking = lazy(() => import('./pages/Booking'));
 const BookingDetail = lazy(() => import('./pages/BookingDetail'));
+const BookingEdit = lazy(() => import('./pages/BookingEdit'));
 const Favorites = lazy(() => import('./pages/Favorites'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const Assignments = lazy(() => import('./pages/Guide/Assignments'));
@@ -27,6 +30,7 @@ const TourForm = lazy(() => import('./pages/Manager/TourForm'));
 const TourListManager = lazy(() => import('./pages/Manager/TourListManager'));
 const MyBookings = lazy(() => import('./pages/MyBookings'));
 const MySupport = lazy(() => import('./pages/MySupport'));
+const PaymentCheckout = lazy(() => import('./pages/PaymentCheckout'));
 const Services = lazy(() => import('./pages/Partner/Services'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Register = lazy(() => import('./pages/Register'));
@@ -61,6 +65,8 @@ export default function App() {
             <Route path="/booking" element={<Booking />} />
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/my-bookings/:id" element={<BookingDetail />} />
+            <Route path="/my-bookings/:id/edit" element={<BookingEdit />} />
+            <Route path="/payments/:id" element={<PaymentCheckout />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/my-support" element={<MySupport />} />
             <Route path="/profile" element={<Profile />} />
@@ -101,6 +107,8 @@ export default function App() {
 
             <Route element={<ProtectedRoute allowedRoles={['accountant']} />}>
               <Route path="/accountant/payments" element={<Payments />} />
+              <Route path="/accountant/refunds" element={<Refunds />} />
+              <Route path="/accountant/logs" element={<AccountantLogs />} />
               <Route path="/accountant/reports" element={<Reports />} />
             </Route>
           </Route>

@@ -1,16 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { Link } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import { bookingAPI } from '../services/api';
 import {
   bookingStatusLabel,
+  bookingPaymentBadgeClass,
+  bookingPaymentLabel,
   formatCurrency,
   formatDate,
-  paymentStatusLabel,
-  resolutionLabel,
   statusBadgeClass,
 } from '../utils/formatters';
 
@@ -24,13 +25,26 @@ const tabLabels = {
 };
 
 const cancelSchema = Yup.object({
-  preferred_resolution: Yup.string().required('Vui lòng chọn phương án xử lý'),
   reason: Yup.string().min(10, 'Vui lòng nhập tối thiểu 10 ký tự').required('Vui lòng nhập lý do hủy'),
-  resolution_note: Yup.string().nullable(),
+  refund_to_bank_name: Yup.string().nullable().max(120),
+  refund_to_account_number: Yup.string().nullable().max(80),
+  refund_to_account_name: Yup.string().nullable().max(120),
 });
 
 function tierCardClass(index) {
   return ['bg-primary-subtle', 'bg-success-subtle', 'bg-warning-subtle', 'bg-danger-subtle'][index] || 'bg-light';
+}
+
+function bookingRemainingAmount(booking) {
+  const total = Number(booking?.total_price || 0);
+  const paid = (booking?.payments || [])
+    .filter((payment) => payment.status === 'success')
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+  const refunded = (booking?.payments || [])
+    .filter((payment) => payment.status === 'refunded')
+    .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+
+  return Math.max(total - Math.max(paid - refunded, 0), 0);
 }
 
 export default function MyBookings() {
@@ -67,13 +81,197 @@ export default function MyBookings() {
 
   const preview = cancelPreviewData?.preview;
   const policy = cancelPreviewData?.policy;
-  const alternatives = useMemo(() => {
-    const items = policy?.alternatives || [];
-    return [
-      { key: 'cash_refund', label: 'Hoàn tiền mặt' },
-      ...items,
-    ];
-  }, [policy]);
+
+  useEffect(() => {
+    if (!selectedBooking) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setSelectedBooking(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedBooking]);
+
+  const cancelPolicyModal = selectedBooking
+    ? createPortal(
+      <>
+        <div
+          className="modal fade show"
+          tabIndex="-1"
+          aria-modal="true"
+          role="dialog"
+          style={{ display: 'block' }}
+          onClick={() => setSelectedBooking(null)}
+        >
+          <div className="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header">
+                <h2 className="modal-title fs-5">Chính sách hoàn tiền theo thời điểm hủy</h2>
+                <button type="button" className="btn-close" onClick={() => setSelectedBooking(null)} aria-label="Close" />
+              </div>
+              <div className="modal-body">
+                {!selectedBooking || previewLoading || !preview ? (
+                  <div className="text-muted">Đang tải thông tin hủy tour...</div>
+                ) : (
+                  <>
+                    <div className="mb-4 rounded-4 border p-4">
+                      <div className="small text-uppercase text-muted mb-2">Booking đang chọn</div>
+                      <div className="h5 mb-1">{selectedBooking.tour?.title}</div>
+                      <div className="text-muted">
+                        Ngày đi {formatDate(selectedBooking.departure_date)} • Còn {preview.days_before_departure} ngày trước khởi hành
+                      </div>
+                    </div>
+
+                    <div className="row g-3 mb-4">
+                      {(policy?.tiers || []).map((tier, index) => (
+                        <div key={tier.key} className="col-lg-3 col-md-6">
+                          <div className={`rounded-4 border p-3 h-100 ${tierCardClass(index)}`}>
+                            <div className="fw-semibold mb-2">{Math.round((tier.refund_rate || 0) * 100)}%</div>
+                            <div className="fw-bold mb-2">{tier.label}</div>
+                            <div className="small mb-2">{tier.refund_text}</div>
+                            <div className="small text-muted">
+                              {tier.processing_days?.[0] || 0}-{tier.processing_days?.[1] || 0} ngày làm việc
+                            </div>
+                            {tier.extra_note ? <div className="small mt-2 text-muted">{tier.extra_note}</div> : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="rounded-4 border border-primary-subtle bg-primary-subtle p-4 mb-4">
+                      <div className="fw-semibold mb-3">
+                        Ví dụ tính hoàn tiền thực tế: {selectedBooking.tour?.title} — Tổng tiền {formatCurrency(preview.base_amount)}
+                      </div>
+                      <div className="d-grid gap-2">
+                        <div className="d-flex justify-content-between">
+                          <span>Tổng tiền đã thanh toán</span>
+                          <strong>{formatCurrency(preview.base_amount)}</strong>
+                        </div>
+                        <div className="d-flex justify-content-between">
+                          <span>Tỷ lệ hoàn</span>
+                          <strong>{Math.round((preview.refund_rate || 0) * 100)}%</strong>
+                        </div>
+                        <div className="d-flex justify-content-between">
+                          <span>Phí hủy tour</span>
+                          <strong>{formatCurrency(preview.fee_amount)}</strong>
+                        </div>
+                        <hr className="my-2" />
+                        <div className="d-flex justify-content-between text-danger">
+                          <span>Số tiền hoàn dự kiến</span>
+                          <strong>{formatCurrency(preview.refund_amount)}</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="row g-4 mb-4">
+                      <div className="col-lg-12">
+                        <div className="rounded-4 border p-4 h-100">
+                          <h3 className="h6 mb-3">Quy trình xử lý</h3>
+                          <div className="small d-grid gap-2">
+                            <div>1. Khách gửi yêu cầu hủy từ trang My Bookings</div>
+                            <div>2. Hệ thống tự tính phí hủy theo chính sách</div>
+                            <div>3. Khách nhập thông tin nhận hoàn tiền</div>
+                            <div>4. Kế toán duyệt và hoàn tiền theo đúng tỷ lệ</div>
+                            <div>5. Hệ thống cập nhật trạng thái hoàn tiền</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Formik
+                      enableReinitialize
+                      initialValues={{
+                        reason: '',
+                        refund_to_bank_name: '',
+                        refund_to_account_number: '',
+                        refund_to_account_name: '',
+                      }}
+                      validationSchema={cancelSchema}
+                      onSubmit={(values, helpers) => {
+                        if ((preview?.refund_amount || 0) > 0) {
+                          const missing = !values.refund_to_bank_name || !values.refund_to_account_number || !values.refund_to_account_name;
+                          if (missing) {
+                            toast.error('Vui lòng nhập đầy đủ ngân hàng, số tài khoản và chủ tài khoản để nhận hoàn tiền.');
+                            return;
+                          }
+                        }
+
+                        cancelMutation.mutate(
+                          {
+                            id: selectedBooking.id,
+                            payload: values,
+                          },
+                          {
+                            onSuccess: () => helpers.resetForm(),
+                          }
+                        );
+                      }}
+                    >
+                      <Form noValidate>
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label">Ngân hàng nhận hoàn</label>
+                            <Field name="refund_to_bank_name" className="form-control" placeholder="VD: TPBank" />
+                            <div className="mt-1 small text-danger">
+                              <ErrorMessage name="refund_to_bank_name" />
+                            </div>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Số tài khoản nhận hoàn</label>
+                            <Field name="refund_to_account_number" className="form-control" placeholder="0123456789" />
+                            <div className="mt-1 small text-danger">
+                              <ErrorMessage name="refund_to_account_number" />
+                            </div>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label">Chủ tài khoản nhận hoàn</label>
+                            <Field name="refund_to_account_name" className="form-control" placeholder="NGUYEN VAN A" />
+                            <div className="mt-1 small text-danger">
+                              <ErrorMessage name="refund_to_account_name" />
+                            </div>
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label">Lý do hủy tour</label>
+                            <Field as="textarea" rows="4" name="reason" className="form-control" />
+                            <div className="mt-1 small text-danger">
+                              <ErrorMessage name="reason" />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="modal-footer px-0 pb-0 mt-4">
+                          <button type="button" className="btn btn-light" onClick={() => setSelectedBooking(null)}>
+                            Giữ booking
+                          </button>
+                          <button type="submit" className="btn btn-danger" disabled={cancelMutation.isPending}>
+                            {cancelMutation.isPending ? 'Đang gửi...' : 'Xác nhận hủy tour'}
+                          </button>
+                        </div>
+                      </Form>
+                    </Formik>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="modal-backdrop fade show" onClick={() => setSelectedBooking(null)} />
+      </>,
+      document.body
+    )
+    : null;
 
   return (
     <div className="container py-4 py-lg-5">
@@ -125,18 +323,28 @@ export default function MyBookings() {
                   <div className="small text-muted">Tổng tiền</div>
                   <div>{formatCurrency(booking.total_price)}</div>
                 </div>
-                <div className="col-sm-4 col-lg-3">
-                  <div className="d-flex flex-column gap-2 align-items-sm-start align-items-lg-end">
-                    <span className={`badge ${statusBadgeClass(booking.status)}`}>{bookingStatusLabel(booking.status)}</span>
-                    <span className={`badge ${statusBadgeClass(booking.payment_status)}`}>{paymentStatusLabel(booking.payment_status)}</span>
+                  <div className="col-sm-4 col-lg-3">
+                    <div className="d-flex flex-column gap-2 align-items-sm-start align-items-lg-end">
+                      <span className={`badge ${statusBadgeClass(booking.status)}`}>{bookingStatusLabel(booking.status)}</span>
+                      <span className={`badge ${bookingPaymentBadgeClass(booking)}`}>{bookingPaymentLabel(booking)}</span>
+                    </div>
                   </div>
-                </div>
               </div>
 
               <div className="mt-3 d-flex flex-wrap gap-2">
                 <Link to={`/my-bookings/${booking.id}`} className="btn btn-outline-primary btn-sm">
                   Xem chi tiết
                 </Link>
+                {bookingRemainingAmount(booking) > 0 && booking.status !== 'cancelled' && (
+                  <Link to={`/payments/${booking.id}`} className="btn btn-primary btn-sm">
+                    Thanh toán
+                  </Link>
+                )}
+                {booking.status === 'pending' && !['partial', 'paid'].includes(booking.payment_status) && (
+                  <Link to={`/my-bookings/${booking.id}/edit`} className="btn btn-outline-dark btn-sm">
+                    Chỉnh sửa
+                  </Link>
+                )}
                 {['pending', 'confirmed'].includes(booking.status) && (
                   <button
                     type="button"
@@ -160,163 +368,7 @@ export default function MyBookings() {
         </div>
       )}
 
-      {selectedBooking && (
-        <>
-          <div className="modal fade show d-block" tabIndex="-1" aria-modal="true" role="dialog">
-        <div className="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2 className="modal-title fs-5">Chính sách hoàn tiền theo thời điểm hủy</h2>
-              <button type="button" className="btn-close" onClick={() => setSelectedBooking(null)} />
-            </div>
-            <div className="modal-body">
-              {!selectedBooking || previewLoading || !preview ? (
-                <div className="text-muted">Đang tải thông tin hủy tour...</div>
-              ) : (
-                <>
-                  <div className="mb-4 rounded-4 border p-4">
-                    <div className="small text-uppercase text-muted mb-2">Booking đang chọn</div>
-                    <div className="h5 mb-1">{selectedBooking.tour?.title}</div>
-                    <div className="text-muted">
-                      Ngày đi {formatDate(selectedBooking.departure_date)} • Còn {preview.days_before_departure} ngày trước khởi hành
-                    </div>
-                  </div>
-
-                  <div className="row g-3 mb-4">
-                    {(policy?.tiers || []).map((tier, index) => (
-                      <div key={tier.key} className="col-lg-3 col-md-6">
-                        <div className={`rounded-4 border p-3 h-100 ${tierCardClass(index)}`}>
-                          <div className="fw-semibold mb-2">{Math.round((tier.refund_rate || 0) * 100)}%</div>
-                          <div className="fw-bold mb-2">{tier.label}</div>
-                          <div className="small mb-2">{tier.refund_text}</div>
-                          <div className="small text-muted">
-                            {tier.processing_days?.[0] || 0}-{tier.processing_days?.[1] || 0} ngày làm việc
-                          </div>
-                          {tier.extra_note ? <div className="small mt-2 text-muted">{tier.extra_note}</div> : null}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="rounded-4 border border-primary-subtle bg-primary-subtle p-4 mb-4">
-                    <div className="fw-semibold mb-3">
-                      Ví dụ tính hoàn tiền thực tế: {selectedBooking.tour?.title} — Tổng tiền {formatCurrency(preview.base_amount)}
-                    </div>
-                    <div className="d-grid gap-2">
-                      <div className="d-flex justify-content-between">
-                        <span>Tổng tiền đã thanh toán</span>
-                        <strong>{formatCurrency(preview.base_amount)}</strong>
-                      </div>
-                      <div className="d-flex justify-content-between">
-                        <span>Tỷ lệ hoàn</span>
-                        <strong>{Math.round((preview.refund_rate || 0) * 100)}%</strong>
-                      </div>
-                      <div className="d-flex justify-content-between">
-                        <span>Phí hủy tour</span>
-                        <strong>{formatCurrency(preview.fee_amount)}</strong>
-                      </div>
-                      <hr className="my-2" />
-                      <div className="d-flex justify-content-between text-danger">
-                        <span>Số tiền hoàn dự kiến</span>
-                        <strong>{formatCurrency(preview.refund_amount)}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="row g-4 mb-4">
-                    <div className="col-lg-6">
-                      <div className="rounded-4 border p-4 h-100">
-                        <h3 className="h6 mb-3">Quyền lợi thay thế</h3>
-                        <div className="d-grid gap-2">
-                          {alternatives.map((item) => (
-                            <div key={item.key} className="small">
-                              {item.key === 'cash_refund' ? '→' : '→'} {resolutionLabel(item.key)}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-lg-6">
-                      <div className="rounded-4 border p-4 h-100">
-                        <h3 className="h6 mb-3">Quy trình xử lý</h3>
-                        <div className="small d-grid gap-2">
-                          <div>1. Khách gửi yêu cầu hủy từ trang My Bookings</div>
-                          <div>2. Hệ thống tự tính phí hủy theo chính sách</div>
-                          <div>3. Khách chọn hoàn tiền, dời ngày, đổi tour hoặc voucher</div>
-                          <div>4. Kế toán duyệt và xử lý thủ công</div>
-                          <div>5. Khách nhận thông báo kết quả</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Formik
-                    enableReinitialize
-                    initialValues={{
-                      preferred_resolution: preview.refund_amount > 0 ? 'cash_refund' : 'reschedule',
-                      reason: '',
-                      resolution_note: '',
-                    }}
-                    validationSchema={cancelSchema}
-                    onSubmit={(values, helpers) => {
-                      cancelMutation.mutate(
-                        {
-                          id: selectedBooking.id,
-                          payload: values,
-                        },
-                        {
-                          onSuccess: () => helpers.resetForm(),
-                        }
-                      );
-                    }}
-                  >
-                    <Form noValidate>
-                      <div className="row g-3">
-                        <div className="col-md-6">
-                          <label className="form-label">Phương án bạn muốn chọn</label>
-                          <Field as="select" name="preferred_resolution" className="form-select">
-                            {alternatives.map((item) => (
-                              <option key={item.key} value={item.key}>
-                                {resolutionLabel(item.key)}
-                              </option>
-                            ))}
-                          </Field>
-                          <div className="mt-1 small text-danger">
-                            <ErrorMessage name="preferred_resolution" />
-                          </div>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Ghi chú thêm</label>
-                          <Field name="resolution_note" className="form-control" placeholder="Ví dụ: muốn dời sang tháng sau, cần voucher cho gia đình..." />
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label">Lý do hủy tour</label>
-                          <Field as="textarea" rows="4" name="reason" className="form-control" />
-                          <div className="mt-1 small text-danger">
-                            <ErrorMessage name="reason" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="modal-footer px-0 pb-0 mt-4">
-                        <button type="button" className="btn btn-light" onClick={() => setSelectedBooking(null)}>
-                          Giữ booking
-                        </button>
-                        <button type="submit" className="btn btn-danger" disabled={cancelMutation.isPending}>
-                          {cancelMutation.isPending ? 'Đang gửi...' : 'Xác nhận hủy tour'}
-                        </button>
-                      </div>
-                    </Form>
-                  </Formik>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-          </div>
-          <div className="modal-backdrop fade show" onClick={() => setSelectedBooking(null)} />
-        </>
-      )}
+      {cancelPolicyModal}
     </div>
   );
 }

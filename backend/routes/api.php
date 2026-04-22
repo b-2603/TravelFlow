@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BankTransferWebhookController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\GuideController;
@@ -38,6 +39,9 @@ Route::get('/bootstrap', function (Request $request) {
     ]);
 });
 
+Route::get('/settings/payment', [AdminController::class, 'paymentSettings']);
+Route::post('/webhooks/bank-transfer', [BankTransferWebhookController::class, 'handle']);
+
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
@@ -60,6 +64,7 @@ Route::middleware('jwt')->group(function () {
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/bookings', [BookingController::class, 'store']);
         Route::get('/bookings/{id}', [BookingController::class, 'show']);
+        Route::put('/bookings/{id}', [BookingController::class, 'update']);
         Route::get('/bookings/{id}/document', [BookingController::class, 'document']);
         Route::get('/bookings/{id}/cancel-preview', [BookingController::class, 'cancelPreview']);
         Route::post('/bookings/{id}/cancel', [BookingController::class, 'cancel']);
@@ -94,15 +99,17 @@ Route::middleware('jwt')->group(function () {
     Route::middleware('role:accountant|admin|customer')->group(function () {
         Route::post('/payments', [PaymentController::class, 'store']);
         Route::get('/payments/{id}', [PaymentController::class, 'show']);
+        Route::post('/payments/{id}/customer-confirm', [PaymentController::class, 'customerConfirm']);
     });
 
     Route::middleware('role:accountant|admin')->group(function () {
         Route::get('/payments', [PaymentController::class, 'index']);
         Route::post('/payments/{id}/confirm', [PaymentController::class, 'confirm']);
-        Route::post('/payments/{id}/refund', [PaymentController::class, 'refund']);
+        Route::get('/accountant/logs', [AdminController::class, 'logs']);
         Route::get('/accountant/refund-requests', [PaymentController::class, 'refundRequests']);
         Route::post('/accountant/refund-requests/{id}/approve', [PaymentController::class, 'approveRefund']);
         Route::post('/accountant/refund-requests/{id}/reject', [PaymentController::class, 'rejectRefund']);
+        Route::post('/accountant/refund-requests/{id}/refunded', [PaymentController::class, 'markRefunded']);
         Route::get('/accountant/partner-liabilities', [PaymentController::class, 'partnerLiabilities']);
         Route::get('/accountant/reports', [PaymentController::class, 'financeReport']);
         Route::get('/accountant/reports/export', [PaymentController::class, 'exportFinanceReport']);

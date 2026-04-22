@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import { agentAPI } from '../../services/api';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import FormikDateInput from '../../components/FormikDateInput';
 
 const schema = Yup.object({
   customer_id: Yup.string().required('Vui lòng chọn khách hàng'),
@@ -182,7 +183,7 @@ export default function AgentCreateBooking() {
                                 </div>
                               </div>
                               <div className="col-md-4">
-                                <Field type="date" name={`passengers.${index}.dob`} className="form-control" />
+                                <FormikDateInput name={`passengers.${index}.dob`} className="form-control" />
                                 <div className="mt-1 small text-danger">
                                   <ErrorMessage name={`passengers.${index}.dob`} />
                                 </div>
@@ -202,7 +203,7 @@ export default function AgentCreateBooking() {
                 </div>
 
                 <div className="col-lg-4">
-                  <div className="sticky-top rounded-4 border bg-light p-4" style={{ top: '96px' }}>
+                  <div className="sticky-top rounded-4 border bg-light p-4 tf-responsive-sticky" style={{ top: '96px' }}>
                     <h3 className="h5 mb-3">Tóm tắt</h3>
                     <div className="mb-2 small text-muted">Khách hàng</div>
                     <div className="mb-3">{selectedCustomer?.name || '--'}</div>

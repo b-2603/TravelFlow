@@ -552,6 +552,12 @@ class AdminController extends Controller
                 'logo' => null,
                 'address' => 'TP. Hồ Chí Minh',
                 'hotline' => '1900 0000',
+                'bank_name' => 'TPBank',
+                'bank_code' => 'TPB',
+                'bank_account_number' => '0328754062',
+                'bank_account_name' => 'NGUYEN TRAN THAI BAO',
+                'bank_branch' => '',
+                'payment_note_prefix' => 'BOOKING',
                 'payment_methods' => ['bank', 'momo', 'vnpay'],
                 'cancellation_policy' => [
                     'tiers' => [
@@ -614,6 +620,63 @@ class AdminController extends Controller
         }
 
         return $this->apiResponse(true, $settings, 'Lấy cấu hình hệ thống thành công.');
+    }
+
+    public function paymentSettings()
+    {
+        $settings = SystemSetting::first();
+
+        $defaults = [
+            'company_name' => 'TravelFlow',
+            'logo' => null,
+            'address' => 'TP. Hồ Chí Minh',
+            'hotline' => '1900 0000',
+            'bank_name' => 'TPBank',
+            'bank_code' => 'TPB',
+            'bank_account_number' => '0328754062',
+            'bank_account_name' => 'NGUYEN TRAN THAI BAO',
+            'bank_branch' => '',
+            'payment_note_prefix' => 'BOOKING',
+            'payment_methods' => ['bank', 'momo', 'vnpay'],
+        ];
+
+        if (! $settings) {
+            $settings = SystemSetting::create($defaults);
+        } else {
+            // Older DB records may exist but miss payment fields -> backfill once to enable QR immediately.
+            $dirty = false;
+            foreach ([
+                'company_name',
+                'hotline',
+                'bank_name',
+                'bank_code',
+                'bank_account_number',
+                'bank_account_name',
+                'bank_branch',
+                'payment_note_prefix',
+            ] as $key) {
+                $value = $settings->{$key} ?? null;
+                if ($value === null || $value === '') {
+                    $settings->{$key} = $defaults[$key];
+                    $dirty = true;
+                }
+            }
+            if ($dirty) {
+                $settings->save();
+            }
+        }
+
+        return $this->apiResponse(true, [
+            'company_name' => $settings->company_name,
+            'logo' => $settings->logo,
+            'hotline' => $settings->hotline,
+            'bank_name' => $settings->bank_name,
+            'bank_code' => $settings->bank_code,
+            'bank_account_number' => $settings->bank_account_number,
+            'bank_account_name' => $settings->bank_account_name,
+            'bank_branch' => $settings->bank_branch,
+            'payment_note_prefix' => $settings->payment_note_prefix,
+        ], 'Lấy cấu hình thanh toán thành công.');
     }
 
     public function updateSettings(SystemSettingUpdateRequest $request)

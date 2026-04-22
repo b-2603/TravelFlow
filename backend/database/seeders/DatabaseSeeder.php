@@ -179,6 +179,51 @@ class DatabaseSeeder extends Seeder
             ]));
         }
 
+        $testDepartureDate = Carbon::now()->addDays(3)->toDateString();
+        $tours->push(Tour::create([
+            'title' => 'Tour test thanh toán 2.000đ',
+            'slug' => 'tour-test-thanh-toan-1000-vnd',
+            'description' => 'Dữ liệu mẫu chuyên dùng để kiểm tra luồng đặt tour và thanh toán với giá trị nhỏ.',
+            'destination' => 'Môi trường kiểm thử',
+            'category' => 'Test',
+            'pinned' => true,
+            'duration_days' => 1,
+            'max_pax' => 10,
+            'price_per_person' => 2000,
+            'promotion_type' => 'none',
+            'promotion_value' => 0,
+            'images' => [
+                'https://picsum.photos/seed/tour-test-thanh-toan-1000-vnd/1200/800',
+            ],
+            'highlights' => [
+                'Giá trị thấp để test thanh toán',
+                'Dễ tìm trong danh sách tour',
+                'Không ảnh hưởng tour thật',
+            ],
+            'itinerary' => [
+                [
+                    'day' => 1,
+                    'title' => 'Thực hiện test thanh toán',
+                    'description' => 'Dùng tour này để kiểm tra luồng đặt chỗ, QR và xác nhận thanh toán.',
+                ],
+            ],
+            'status' => 'approved',
+            'reject_reason' => null,
+            'approved_at' => Carbon::now(),
+            'created_by' => $creator->_id,
+            'linked_partner_ids' => [],
+            'assigned_guide_id' => null,
+            'departures' => [
+                [
+                    'date' => $testDepartureDate,
+                    'available_slots' => 10,
+                    'price_override' => 2000,
+                    'status' => 'active',
+                    'assigned_guide_id' => null,
+                ],
+            ],
+        ]));
+
         foreach ($customers as $index => $customer) {
             $tour = $tours[$index % $tours->count()];
             $departure = collect($tour->departures)->first();
