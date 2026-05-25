@@ -21,6 +21,16 @@ class Booking extends BaseModel
         'internal_note',
         'special_requirements',
         'payment_status',
+        // Các trường mới cho agent
+        'passenger_confirmed',
+        'passenger_confirmation_note',
+        'passenger_confirmed_at',
+        'cancellation_requested',
+        'cancellation_requested_at',
+        'cancellation_reason',
+        'cancellation_note',
+        'requested_refund_amount',
+        'reminders',
     ];
 
     protected $casts = [
@@ -29,6 +39,12 @@ class Booking extends BaseModel
         'total_price' => 'float',
         'passengers' => 'array',
         'special_requirements' => 'array',
+        'reminders' => 'array',
+        'passenger_confirmed' => 'boolean',
+        'passenger_confirmed_at' => 'datetime',
+        'cancellation_requested' => 'boolean',
+        'cancellation_requested_at' => 'datetime',
+        'requested_refund_amount' => 'float',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -32,6 +32,10 @@ class Tour extends BaseModel
         'linked_partner_ids',
         'departures',
         'deleted_at',
+        // Các trường mới cho custom tour
+        'is_custom',
+        'custom_for_customer',
+        'custom_requests',
     ];
 
     protected $casts = [
@@ -46,6 +50,8 @@ class Tour extends BaseModel
         'guide_progress' => 'array',
         'linked_partner_ids' => 'array',
         'departures' => 'array',
+        'is_custom' => 'boolean',
+        'custom_requests' => 'array',
         'approved_at' => 'datetime',
         'deleted_at' => 'datetime',
         'created_at' => 'datetime',

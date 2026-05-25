@@ -133,57 +133,57 @@ Hệ thống cho phép đăng nhập bằng:
 
 ### Quản trị viên
 - Username: `quan_tri`
-- Email: `quantri@travel.local`
-- Password: `Admin@123456`
+- Email: `quantri@gmail.com`
+- Password: `Password@123`
 
 ### Quản lý tour
 - Username: `quan_ly_tour_01`
-- Email: `quanlytour01@travel.local`
+- Email: `quanlytour01@gmail.com`
 - Password: `Password@123`
 
 ### Nhân viên tư vấn
 - Username: `tu_van_01`
-- Email: `tuvan01@travel.local`
+- Email: `tuvan01@gmail.com`
 - Password: `Password@123`
 
 ### Kế toán / Tài chính
 - Username: `ke_toan_01`
-- Email: `ketoan01@travel.local`
+- Email: `ketoan01@gmail.com`
 - Password: `Password@123`
 
 ### Hướng dẫn viên
 - Username: `huong_dan_01`
-- Email: `huongdan01@travel.local`
+- Email: `huongdan01@gmail.com`
 - Password: `Password@123`
 
 - Username: `huong_dan_02`
-- Email: `huongdan02@travel.local`
+- Email: `huongdan02@gmail.com`
 - Password: `Password@123`
 
 - Username: `huong_dan_03`
-- Email: `huongdan03@travel.local`
+- Email: `huongdan03@gmail.com`
 - Password: `Password@123`
 
 ### Đối tác dịch vụ
 - Username: `doi_tac_01`
-- Email: `doitac01@travel.local`
+- Email: `doitac01@gmail.com`
 - Password: `Password@123`
 
 ### Khách hàng
 - Username: `khach_hang_01`
-- Email: `khachhang01@travel.local`
+- Email: `khachhang01@gmail.com`
 - Password: `Password@123`
 
 - Username: `khach_hang_02`
-- Email: `khachhang02@travel.local`
+- Email: `khachhang02@gmail.com`
 - Password: `Password@123`
 
 - Username: `khach_hang_03`
-- Email: `khachhang03@travel.local`
+- Email: `khachhang03@gmail.com`
 - Password: `Password@123`
 
 - Username: `khach_hang_04`
-- Email: `khachhang04@travel.local`
+- Email: `khachhang04@gmail.com`
 - Password: `Password@123`
 
 ## Luồng phân công hướng dẫn viên hiện tại

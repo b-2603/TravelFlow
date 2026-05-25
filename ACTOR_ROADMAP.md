@@ -61,17 +61,17 @@ Mục tiêu là triển khai tuần tự, giữ được chất lượng chạy 
 ### Tư vấn khách hàng
 - [x] Có workspace riêng
 - [x] Xem toàn bộ tour để tư vấn
-- [ ] Xây dựng custom tour
+- [x] Xây dựng custom tour
 - [x] Tra cứu lịch sử khách hàng cơ bản
 - [x] Tạo booking thay khách
 - [x] Ghi chú nội bộ vào booking / hồ sơ xử lý
 
 ### Xử lý đơn và hỗ trợ
 - [x] Xem booking được giao phụ trách
-- [ ] Xác nhận lại thông tin hành khách
-- [ ] Xử lý yêu cầu hủy và chuyển kế toán
-- [ ] Hỗ trợ sự cố hành trình
-- [ ] Gửi email / SMS nhắc trước chuyến đi
+- [x] Xác nhận lại thông tin hành khách
+- [x] Xử lý yêu cầu hủy và chuyển kế toán
+- [x] Hỗ trợ sự cố hành trình
+- [x] Gửi email / SMS nhắc trước chuyến đi
 - [x] Cập nhật ghi chú đặc biệt cho booking
 
 ### Báo cáo cá nhân
@@ -81,8 +81,8 @@ Mục tiêu là triển khai tuần tự, giữ được chất lượng chạy 
 - [x] KPI cá nhân cơ bản
 
 ### Trạng thái
-- Đã có luồng tư vấn cơ bản dùng được.
-- Còn thiếu custom tour và workflow hỗ trợ sâu hơn.
+- Đã hoàn thiện toàn bộ luồng tư vấn và hỗ trợ khách hàng.
+- Có đầy đủ chức năng: custom tour, xác nhận hành khách, xử lý hủy, hỗ trợ sự cố, gửi reminder.
 
 ---
 
@@ -191,18 +191,23 @@ Mục tiêu là triển khai tuần tự, giữ được chất lượng chạy 
 - [x] Xem chi tiết lịch trình, điểm tham quan, địa chỉ cơ bản
 - [x] Xem danh sách đoàn đầy đủ
 - [x] Xem đối tác đi kèm
-- [ ] Nhận thông báo đổi lịch
+- [x] Nhận thông báo đổi lịch
 
 ### Cập nhật thực địa
-- [x] Điểm danh khách
+- [x] Điểm danh khách (chi tiết theo ngày)
 - [x] Cập nhật tiến trình tour
-- [x] Báo cáo sự cố thực địa
+- [x] Báo cáo sự cố thực địa (với mức độ nghiêm trọng)
 - [x] Ghi chú cuối ngày cho quản lý tour
 - [x] Chuyển trạng thái `in-progress -> completed`
 
+### Báo cáo và thống kê
+- [x] Dashboard tổng quan với thống kê
+- [x] Thống kê KPI cá nhân (theo ngày/tuần/tháng/năm)
+- [x] Xem lịch sử tiến trình tour
+
 ### Trạng thái
-- Đã có luồng hướng dẫn viên dùng được ở mức nghiệp vụ cốt lõi.
-- Còn thiếu thông báo đổi lịch và các lớp điều phối thời gian thực sâu hơn.
+- Đã hoàn thiện toàn bộ luồng hướng dẫn viên.
+- Có đầy đủ chức năng: xem assignment, điểm danh, báo cáo sự cố, gửi ghi chú, nhận thông báo, thống kê KPI.
 
 ---
 

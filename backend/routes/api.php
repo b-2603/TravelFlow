@@ -147,8 +147,30 @@ Route::middleware('jwt')->group(function () {
     });
 
     Route::middleware('role:guide|admin')->prefix('guide')->group(function () {
+        // Dashboard và thống kê
+        Route::get('/dashboard', [GuideController::class, 'dashboard']);
+        Route::get('/stats', [GuideController::class, 'personalStats']);
+        
+        // Quản lý tour được phân công
         Route::get('/assignments', [GuideController::class, 'assignments']);
+        Route::get('/assignments/{tourId}', [GuideController::class, 'showAssignment']);
+        Route::get('/assignments/{tourId}/{departureDate}', [GuideController::class, 'showAssignment']);
+        
+        // Điểm danh và tiến trình
         Route::post('/tours/{id}/update-status', [GuideController::class, 'updateStatus']);
+        Route::post('/tours/{tourId}/attendance/{departureDate}', [GuideController::class, 'takeAttendance']);
+        Route::get('/tours/{tourId}/progress', [GuideController::class, 'progressHistory']);
+        
+        // Thông tin đoàn và đối tác
+        Route::get('/tours/{tourId}/passengers', [GuideController::class, 'passengers']);
+        Route::get('/tours/{tourId}/partners', [GuideController::class, 'partners']);
+        
+        // Báo cáo và ghi chú
+        Route::post('/tours/{tourId}/report-incident', [GuideController::class, 'reportIncident']);
+        Route::post('/tours/{tourId}/day-note', [GuideController::class, 'submitDayNote']);
+        
+        // Thông báo
+        Route::get('/notifications', [GuideController::class, 'notifications']);
     });
 
     Route::middleware('role:partner|admin')->prefix('partner')->group(function () {
@@ -159,11 +181,38 @@ Route::middleware('jwt')->group(function () {
     });
 
     Route::middleware('role:agent|admin')->prefix('agent')->group(function () {
+        // Dashboard và thống kê
         Route::get('/dashboard', [AgentController::class, 'dashboard']);
+        Route::get('/stats', [AgentController::class, 'personalStats']);
+        
+        // Quản lý tour để tư vấn
         Route::get('/tours', [AgentController::class, 'tours']);
+        Route::get('/tours/{id}', [AgentController::class, 'showTour']);
+        
+        // Quản lý khách hàng
         Route::get('/customers', [AgentController::class, 'customers']);
+        Route::get('/customers/{id}', [AgentController::class, 'showCustomer']);
+        
+        // Quản lý booking phụ trách
         Route::get('/bookings', [AgentController::class, 'bookings']);
+        Route::get('/bookings/{id}', [AgentController::class, 'showBooking']);
         Route::post('/bookings', [AgentController::class, 'storeBooking']);
         Route::put('/bookings/{id}', [AgentController::class, 'updateBooking']);
+        
+        // Xác nhận thông tin hành khách
+        Route::post('/bookings/{id}/confirm-passenger', [AgentController::class, 'confirmPassengerInfo']);
+        
+        // Xử lý hủy booking
+        Route::post('/bookings/{id}/cancel', [AgentController::class, 'processCancellation']);
+        
+        // Gửi reminder trước chuyến đi
+        Route::post('/bookings/{id}/send-reminder', [AgentController::class, 'sendPreDepartureReminder']);
+        
+        // Hỗ trợ sự cố
+        Route::get('/support-tickets', [AgentController::class, 'supportTickets']);
+        Route::post('/support-tickets/{ticketId}/reply', [AgentController::class, 'replySupportTicket']);
+        
+        // Tạo custom tour
+        Route::post('/custom-tours', [AgentController::class, 'createCustomTour']);
     });
 });

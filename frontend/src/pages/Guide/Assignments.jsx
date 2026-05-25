@@ -59,6 +59,9 @@ export default function Assignments() {
   const [note, setNote] = useState('');
   const [dayNote, setDayNote] = useState('');
   const [incidentType, setIncidentType] = useState('');
+  const [dayNumber, setDayNumber] = useState(1);
+  const [location, setLocation] = useState('');
+  const [weather, setWeather] = useState('');
   const [attendance, setAttendance] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
 
@@ -109,6 +112,9 @@ export default function Assignments() {
     setNote(assignment.latest_progress?.note || '');
     setDayNote(assignment.latest_progress?.day_note || '');
     setIncidentType(assignment.latest_progress?.incident_type || '');
+    setDayNumber(assignment.latest_progress?.day_number || 1);
+    setLocation(assignment.latest_progress?.location || '');
+    setWeather(assignment.latest_progress?.weather || '');
     setImageFiles([]);
 
     const passengerItems = assignment.bookings.flatMap((booking) =>
@@ -226,15 +232,12 @@ export default function Assignments() {
                     </div>
 
                     <div className="d-flex flex-wrap gap-2">
-                      <button
-                        type="button"
+                      <Link
+                        to={`/guide/assignments/${assignment.tour_id}/${assignment.departure?.date}`}
                         className="btn btn-outline-secondary btn-sm"
-                        data-bs-toggle="modal"
-                        data-bs-target="#guideDetailModal"
-                        onClick={() => setSelectedAssignment(assignment)}
                       >
                         Xem chi tiết
-                      </button>
+                      </Link>
                       <button
                         type="button"
                         className="btn btn-primary btn-sm"
@@ -458,6 +461,36 @@ export default function Assignments() {
                       placeholder="Ví dụ: trễ xe, thời tiết xấu, sức khỏe khách"
                     />
                   </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Ngày báo cáo</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className="form-control"
+                      value={dayNumber}
+                      onChange={(e) => setDayNumber(Number(e.target.value) || 1)}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Địa điểm</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Ví dụ: Sân bay, khách sạn, bến tàu"
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label">Thời tiết</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={weather}
+                      onChange={(e) => setWeather(e.target.value)}
+                      placeholder="Ví dụ: nắng, mưa, nhiều gió"
+                    />
+                  </div>
                   <div className="col-12">
                     <label className="form-label">Ghi chú hiện trường</label>
                     <textarea
@@ -553,6 +586,9 @@ export default function Assignments() {
                   formData.append('note', note);
                   formData.append('day_note', dayNote);
                   formData.append('incident_type', incidentType || '');
+                  formData.append('day_number', String(dayNumber));
+                  formData.append('location', location);
+                  formData.append('weather', weather);
                   formData.append('departure_date', selectedAssignment.departure?.date || '');
 
                   attendance.forEach((item, index) => {

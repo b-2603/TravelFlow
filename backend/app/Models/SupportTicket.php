@@ -14,12 +14,16 @@ class SupportTicket extends BaseModel
         'subject',
         'message',
         'status',
+        'priority',
+        'messages',
         'reply',
         'handled_by',
         'handled_at',
+        'assigned_agent_id',
     ];
 
     protected $casts = [
+        'messages' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'handled_at' => 'datetime',

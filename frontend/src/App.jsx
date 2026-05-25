@@ -14,6 +14,10 @@ const AgentDashboard = lazy(() => import('./pages/Agent/Dashboard'));
 const AgentBookings = lazy(() => import('./pages/Agent/Bookings'));
 const AgentCustomers = lazy(() => import('./pages/Agent/Customers'));
 const AgentCreateBooking = lazy(() => import('./pages/Agent/CreateBooking'));
+const GuideDashboard = lazy(() => import('./pages/Guide/Dashboard'));
+const GuideNotifications = lazy(() => import('./pages/Guide/Notifications'));
+const GuideHistory = lazy(() => import('./pages/Guide/History'));
+const AssignmentDetail = lazy(() => import('./pages/Guide/AssignmentDetail'));
 const Payments = lazy(() => import('./pages/Accountant/Payments'));
 const Refunds = lazy(() => import('./pages/Accountant/Refunds'));
 const AccountantLogs = lazy(() => import('./pages/Accountant/Logs'));
@@ -98,7 +102,12 @@ export default function App() {
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['guide']} />}>
+              <Route path="/guide/dashboard" element={<GuideDashboard />} />
               <Route path="/guide/assignments" element={<Assignments />} />
+              <Route path="/guide/assignments/:tourId" element={<AssignmentDetail />} />
+              <Route path="/guide/assignments/:tourId/:departureDate" element={<AssignmentDetail />} />
+              <Route path="/guide/notifications" element={<GuideNotifications />} />
+              <Route path="/guide/history" element={<GuideHistory />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['partner']} />}>

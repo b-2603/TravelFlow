@@ -2,7 +2,7 @@ export function getWorkspacePath(role) {
   if (role === 'admin') return '/admin/dashboard';
   if (role === 'tour_manager') return '/manager/tours';
   if (role === 'agent') return '/agent/dashboard';
-  if (role === 'guide') return '/guide/assignments';
+  if (role === 'guide') return '/guide/dashboard';
   if (role === 'partner') return '/partner/services';
   if (role === 'accountant') return '/accountant/payments';
   if (role === 'customer') return '/my-bookings';

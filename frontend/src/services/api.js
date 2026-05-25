@@ -164,8 +164,20 @@ export const accountantAPI = {
 };
 
 export const guideAPI = {
+  dashboard: () => api.get('/guide/dashboard'),
   assignments: () => api.get('/guide/assignments'),
+  showAssignment: (tourId, departureDate) =>
+    api.get(departureDate ? `/guide/assignments/${tourId}/${departureDate}` : `/guide/assignments/${tourId}`),
   updateStatus: (id, payload) => api.post(`/guide/tours/${id}/update-status`, payload),
+  takeAttendance: (tourId, departureDate, payload) =>
+    api.post(`/guide/tours/${tourId}/attendance/${departureDate}`, payload),
+  progressHistory: (tourId) => api.get(`/guide/tours/${tourId}/progress`),
+  passengers: (tourId) => api.get(`/guide/tours/${tourId}/passengers`),
+  partners: (tourId) => api.get(`/guide/tours/${tourId}/partners`),
+  reportIncident: (tourId, payload) => api.post(`/guide/tours/${tourId}/report-incident`, payload),
+  submitDayNote: (tourId, payload) => api.post(`/guide/tours/${tourId}/day-note`, payload),
+  notifications: () => api.get('/guide/notifications'),
+  stats: () => api.get('/guide/stats'),
 };
 
 export const partnerAPI = {

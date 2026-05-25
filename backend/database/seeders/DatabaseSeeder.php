@@ -38,8 +38,8 @@ class DatabaseSeeder extends Seeder
         $admin = User::create([
             'name' => 'Quản trị hệ thống',
             'username' => 'quan_tri',
-            'email' => 'quantri@travel.local',
-            'password' => 'Admin@123456',
+            'email' => 'quantri@gmail.com',
+            'password' => 'Password@123',
             'phone' => '0900000000',
             'avatar' => 'https://i.pravatar.cc/300?img=1',
             'role' => 'admin',
@@ -49,17 +49,17 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $seedUsers = [
-            ['role' => 'tour_manager', 'name' => 'Quản lý tour 01', 'username' => 'quan_ly_tour_01', 'email' => 'quanlytour01@travel.local'],
-            ['role' => 'agent', 'name' => 'Nhân viên tư vấn 01', 'username' => 'tu_van_01', 'email' => 'tuvan01@travel.local'],
-            ['role' => 'accountant', 'name' => 'Kế toán 01', 'username' => 'ke_toan_01', 'email' => 'ketoan01@travel.local'],
-            ['role' => 'guide', 'name' => 'Hướng dẫn viên 01', 'username' => 'huong_dan_01', 'email' => 'huongdan01@travel.local'],
-            ['role' => 'guide', 'name' => 'Hướng dẫn viên 02', 'username' => 'huong_dan_02', 'email' => 'huongdan02@travel.local'],
-            ['role' => 'guide', 'name' => 'Hướng dẫn viên 03', 'username' => 'huong_dan_03', 'email' => 'huongdan03@travel.local'],
-            ['role' => 'partner', 'name' => 'Đối tác dịch vụ 01', 'username' => 'doi_tac_01', 'email' => 'doitac01@travel.local'],
-            ['role' => 'customer', 'name' => 'Khách hàng 01', 'username' => 'khach_hang_01', 'email' => 'khachhang01@travel.local'],
-            ['role' => 'customer', 'name' => 'Khách hàng 02', 'username' => 'khach_hang_02', 'email' => 'khachhang02@travel.local'],
-            ['role' => 'customer', 'name' => 'Khách hàng 03', 'username' => 'khach_hang_03', 'email' => 'khachhang03@travel.local'],
-            ['role' => 'customer', 'name' => 'Khách hàng 04', 'username' => 'khach_hang_04', 'email' => 'khachhang04@travel.local'],
+            ['role' => 'tour_manager', 'name' => 'Quản lý tour 01', 'username' => 'quan_ly_tour_01', 'email' => 'quanlytour01@gmail.com'],
+            ['role' => 'agent', 'name' => 'Nhân viên tư vấn 01', 'username' => 'tu_van_01', 'email' => 'tuvan01@gmail.com'],
+            ['role' => 'accountant', 'name' => 'Kế toán 01', 'username' => 'ke_toan_01', 'email' => 'ketoan01@gmail.com'],
+            ['role' => 'guide', 'name' => 'Hướng dẫn viên 01', 'username' => 'huong_dan_01', 'email' => 'huongdan01@gmail.com'],
+            ['role' => 'guide', 'name' => 'Hướng dẫn viên 02', 'username' => 'huong_dan_02', 'email' => 'huongdan02@gmail.com'],
+            ['role' => 'guide', 'name' => 'Hướng dẫn viên 03', 'username' => 'huong_dan_03', 'email' => 'huongdan03@gmail.com'],
+            ['role' => 'partner', 'name' => 'Đối tác dịch vụ 01', 'username' => 'doi_tac_01', 'email' => 'doitac01@gmail.com'],
+            ['role' => 'customer', 'name' => 'Khách hàng 01', 'username' => 'khach_hang_01', 'email' => 'khachhang01@gmail.com'],
+            ['role' => 'customer', 'name' => 'Khách hàng 02', 'username' => 'khach_hang_02', 'email' => 'khachhang02@gmail.com'],
+            ['role' => 'customer', 'name' => 'Khách hàng 03', 'username' => 'khach_hang_03', 'email' => 'khachhang03@gmail.com'],
+            ['role' => 'customer', 'name' => 'Khách hàng 04', 'username' => 'khach_hang_04', 'email' => 'khachhang04@gmail.com'],
         ];
 
         $users = collect();
