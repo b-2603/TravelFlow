@@ -13,6 +13,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('bookings:send-reminders')->dailyAt('08:00');
+        // Reset annual spending for users on Jan 1st at 00:05
+        $schedule->command('users:reset-annual-spending')->yearlyOn(1, 1, '00:05');
     }
 
     /**

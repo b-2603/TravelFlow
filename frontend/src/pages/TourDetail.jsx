@@ -94,14 +94,34 @@ export default function TourDetail() {
     <div className="container py-4 py-lg-5">
       <div className="row g-4">
         <div className="col-lg-8">
-          <div id="tourGallery" className="carousel slide mb-4 overflow-hidden rounded-4 shadow-sm">
+          <div id="tourGallery" className="carousel slide mb-4 overflow-hidden rounded-4 shadow-sm" data-bs-ride="carousel">
+            <div className="carousel-indicators">
+              {(tour.images?.length ? tour.images : [null]).map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  data-bs-target="#tourGallery"
+                  data-bs-slide-to={index}
+                  className={index === 0 ? 'active' : ''}
+                  aria-current={index === 0 ? 'true' : 'false'}
+                ></button>
+              ))}
+            </div>
             <div className="carousel-inner">
-              {(tour.images?.length ? tour.images : ['https://picsum.photos/seed/detail/1200/800']).map((image, index) => (
-                <div key={image} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
+              {(tour.images?.length ? tour.images : ['https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1200&q=80']).map((image, index) => (
+                <div key={index} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
                   <img src={image} alt={tour.title} className="d-block w-100" style={{ height: 440, objectFit: 'cover' }} loading={index === 0 ? 'eager' : 'lazy'} />
                 </div>
               ))}
             </div>
+            <button className="carousel-control-prev" type="button" data-bs-target="#tourGallery" data-bs-slide="prev">
+              <span className="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span className="visually-hidden">Trước</span>
+            </button>
+            <button className="carousel-control-next" type="button" data-bs-target="#tourGallery" data-bs-slide="next">
+              <span className="carousel-control-next-icon" aria-hidden="true"></span>
+              <span className="visually-hidden">Sau</span>
+            </button>
           </div>
 
           <div className="mb-3 d-flex flex-wrap gap-2">
@@ -153,6 +173,94 @@ export default function TourDetail() {
 
               <hr className="my-4" />
 
+              <div className="row g-4 mb-4">
+                <div className="col-lg-6">
+                  <h2 className="h5 mb-3">Thông tin điểm đến</h2>
+                  <div className="rounded-3 border p-3 bg-light">
+                    {tour.destination_overview || 'Chưa có thông tin.'}
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <h2 className="h5 mb-3">Lịch sử / bối cảnh</h2>
+                  <div className="rounded-3 border p-3 bg-light">
+                    {tour.historical_background || 'Chưa có thông tin.'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="row g-4 mb-4">
+                <div className="col-lg-6">
+                  <h2 className="h5 mb-3">Văn hóa địa phương</h2>
+                  <div className="d-grid gap-2">
+                    {(tour.local_culture || []).map((item) => (
+                      <div key={item} className="rounded-3 border p-3">
+                        {item}
+                      </div>
+                    ))}
+                    {(tour.local_culture || []).length === 0 && <div className="text-muted">Chưa có thông tin.</div>}
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <h2 className="h5 mb-3">Thời điểm đẹp nhất để đi</h2>
+                  <div className="rounded-3 border p-3 bg-light">
+                    {tour.best_time_to_visit || 'Chưa có thông tin.'}
+                  </div>
+                  <div className="mt-3">
+                    <h3 className="h6 mb-2">Ghi chú thời tiết</h3>
+                    <div className="rounded-3 border p-3">
+                      {tour.weather_notes || 'Chưa có thông tin.'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <hr className="my-4" />
+
+              <div className="row g-4 mb-4">
+                <div className="col-lg-6">
+                  <h2 className="h5 mb-3">Dịch vụ bao gồm</h2>
+                  <div className="d-grid gap-2">
+                    {(tour.included_services || []).map((item) => (
+                      <div key={item} className="rounded-3 border p-3">
+                        {item}
+                      </div>
+                    ))}
+                    {(tour.included_services || []).length === 0 && <div className="text-muted">Chưa có thông tin.</div>}
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <h2 className="h5 mb-3">Dịch vụ không bao gồm</h2>
+                  <div className="d-grid gap-2">
+                    {(tour.excluded_services || []).map((item) => (
+                      <div key={item} className="rounded-3 border p-3">
+                        {item}
+                      </div>
+                    ))}
+                    {(tour.excluded_services || []).length === 0 && <div className="text-muted">Chưa có thông tin.</div>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="row g-4 mb-4">
+                <div className="col-lg-6">
+                  <h2 className="h5 mb-3">Phù hợp với</h2>
+                  <div className="d-flex flex-wrap gap-2">
+                    {(tour.suitable_for || []).map((item) => (
+                      <span key={item} className="badge bg-light text-dark border">{item}</span>
+                    ))}
+                    {(tour.suitable_for || []).length === 0 && <div className="text-muted">Chưa có thông tin.</div>}
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <h2 className="h5 mb-3">Điểm tập trung</h2>
+                  <div className="rounded-3 border p-3">
+                    {tour.meeting_point || 'Chưa cập nhật'}
+                  </div>
+                </div>
+              </div>
+
+              <hr className="my-4" />
+
               <h2 className="h5 mb-3">Điều kiện tham gia</h2>
               <div className="d-grid gap-2">
                 {(tour.participation_conditions || []).map((item) => (
@@ -160,6 +268,18 @@ export default function TourDetail() {
                     {item}
                   </div>
                 ))}
+              </div>
+
+              <hr className="my-4" />
+
+              <h2 className="h5 mb-3">Lưu ý khi đi tour</h2>
+              <div className="d-grid gap-2">
+                {(tour.travel_tips || []).map((item) => (
+                  <div key={item} className="rounded-3 border p-3">
+                    {item}
+                  </div>
+                ))}
+                {(tour.travel_tips || []).length === 0 && <div className="text-muted">Chưa có thông tin.</div>}
               </div>
             </div>
           )}

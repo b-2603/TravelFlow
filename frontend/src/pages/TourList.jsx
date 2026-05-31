@@ -18,7 +18,7 @@ function TourCard({ tour, index }) {
     <Link to={`/tours/${tour.slug}`} className="text-decoration-none text-reset d-block h-100">
       <article className="tf-tour-card tf-tour-card-pro h-100">
         <div className="tf-card-media tf-tour-card-media">
-          <img src={tour.images?.[0] || `https://picsum.photos/seed/${tour.slug}/900/700`} alt={tour.title} loading="lazy" />
+          <img src={tour.images?.[0] || 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=900&q=80'} alt={tour.title} loading="lazy" />
           <div className="tf-card-overlay" />
           <span className="tf-glow-badge">{badge}</span>
           <FavoriteButton tourId={tour.id} />

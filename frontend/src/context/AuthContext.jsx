@@ -93,6 +93,16 @@ export function AuthProvider({ children }) {
     }
 
     persistAuth(nextToken, nextUser);
+
+    try {
+      const meResponse = await authAPI.me();
+      const verifiedUser = meResponse.data?.data?.user ?? meResponse.data?.data ?? nextUser;
+      persistAuth(nextToken, verifiedUser);
+    } catch (error) {
+      clearAuth();
+      throw error;
+    }
+
     return response.data?.data;
   };
 

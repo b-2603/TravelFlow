@@ -83,6 +83,7 @@ export function statusBadgeClass(status) {
     unpaid: 'bg-secondary',
     partial: 'bg-info text-dark',
     open: 'bg-warning text-dark',
+    in_progress: 'bg-info text-dark',
     answered: 'bg-primary',
     closed: 'bg-secondary',
     approved: 'bg-success',
@@ -169,6 +170,7 @@ export function bookingPaymentBadgeClass(booking) {
 export function supportStatusLabel(status) {
   const map = {
     open: 'Đang chờ xử lý',
+    in_progress: 'Đang xử lý',
     answered: 'Đã phản hồi',
     closed: 'Đã đóng',
   };

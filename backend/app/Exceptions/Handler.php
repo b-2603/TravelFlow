@@ -26,5 +26,16 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        $this->renderable(function (\MongoDB\Driver\Exception\Exception $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'data' => null,
+                    'message' => 'Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.',
+                    'code' => 503,
+                ], 503);
+            }
+        });
     }
 }

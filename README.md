@@ -18,10 +18,6 @@ Các vai trò đang có trong hệ thống:
 
 - `frontend/`: ứng dụng React đang dùng thật
 - `backend/`: API Laravel đang dùng thật
-- `docs/postman/`: Postman collection và environment
-- `infra/nginx/`: cấu hình Nginx phục vụ deploy
-- `infra/docker-compose.yml`: cấu hình Docker
-- `ACTOR_ROADMAP.md`: ghi chú phạm vi actor và tiến độ triển khai
 
 Lưu ý:
 - Thư mục backup scaffold cũ đã bị xóa
@@ -102,21 +98,34 @@ npm.cmd run dev:web
 
 ## Seed dữ liệu mẫu
 
+### 🟢 Cách AN TOÀN (KHÔNG xóa dữ liệu cũ)
+
 ```powershell
 cd "d:\Công nghệ mới\bokinng_tour\backend"
-& "D:\codexphp\php.exe" -c "D:\codexphp" artisan db:seed --force
+& "D:\codexphp\php.exe" -c "D:\codexphp" artisan db:seed
 ```
 
-Seeder hiện tạo:
-- người dùng mẫu theo từng vai trò
-- nhiều hướng dẫn viên để test điều phối
-- tour mẫu
-- booking mẫu
-- payment mẫu
-- review mẫu
-- favorite mẫu
-- support ticket mẫu
-- refund request mẫu
+Seeder này sẽ **THÊM** dữ liệu mẫu mà **KHÔNG XÓA** dữ liệu hiện có. Sử dụng khi:
+- Bạn muốn thêm dữ liệu mẫu lần đầu
+- Bạn đã có dữ liệu và muốn giữ nguyên
+- Tài khoản mới đăng ký sẽ KHÔNG bị mất
+
+### 🔴 Cách RESET HOÀN TOÀN (XÓA toàn bộ dữ liệu)
+
+```powershell
+cd "d:\Công nghệ mới\bokinng_tour\backend"
+& "D:\codexphp\php.exe" -c "D:\codexphp" artisan db:seed --class=InitialDataSeeder
+```
+
+**CẢNH BÁO:** Lệnh này sẽ **XÓA SẠCH** toàn bộ dữ liệu (users, bookings, tours, payments, v.v.) và tạo lại từ đầu. Chỉ sử dụng khi muốn reset hoàn toàn database!
+
+### Các seeder có sẵn:
+
+| Seeder | Mô tả | Hành động |
+|--------|-------|-----------|
+| `DatabaseSeeder` (mặc định) | Thêm dữ liệu mẫu an toàn | KHÔNG xóa dữ liệu cũ |
+| `SampleDataSeeder` | Thêm dữ liệu mẫu chi tiết | KHÔNG xóa dữ liệu cũ |
+| `InitialDataSeeder` | Reset và tạo mới toàn bộ | **XÓA TOÀN BỘ** dữ liệu |
 
 Nếu MongoDB chưa chạy, lệnh seed sẽ lỗi kết nối.
 
@@ -205,16 +214,6 @@ cd "d:\Công nghệ mới\bokinng_tour\frontend"
 npm.cmd run build
 ```
 
-## Deploy và test API
-
-Nếu cần test API bằng Postman:
-- [travel-management.postman_collection.json](d:/Công%20nghệ%20mới/bokinng_tour/docs/postman/travel-management.postman_collection.json)
-- [travel-management.postman_environment.json](d:/Công%20nghệ%20mới/bokinng_tour/docs/postman/travel-management.postman_environment.json)
-
-Nếu cần deploy hoặc chạy bằng Docker/Nginx:
-- [docker-compose.yml](d:/Công%20nghệ%20mới/bokinng_tour/infra/docker-compose.yml)
-- [default.conf](d:/Công%20nghệ%20mới/bokinng_tour/infra/nginx/default.conf)
-
 ## Một số API chính
 
 ### Auth
@@ -239,6 +238,7 @@ Nếu cần deploy hoặc chạy bằng Docker/Nginx:
 - `GET /api/admin/dashboard`
 - `GET /api/admin/users`
 - `GET /api/admin/tours`
+- `GET /api/admin/reviews`
 - `GET /api/admin/guide-assignments`
 - `POST /api/admin/tours/{id}/approve`
 - `POST /api/admin/tours/{id}/reject`

@@ -11,6 +11,7 @@ function titleFromPath(pathname) {
     dashboard: 'Tổng quan',
     users: 'Người dùng',
     tours: 'Tour',
+    reviews: 'Đánh giá',
     bookings: 'Đơn đặt',
     logs: 'Nhật ký',
     create: 'Tạo tour',
@@ -21,6 +22,8 @@ function titleFromPath(pathname) {
     reports: 'Báo cáo',
     customers: 'Khách hàng',
     'create-booking': 'Tạo booking',
+    'support-tickets': 'Ticket hỗ trợ',
+    'custom-tours': 'Custom tour',
   };
 
   return labels[last] || last.replace('-', ' ');

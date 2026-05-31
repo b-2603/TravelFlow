@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { adminAPI, bookingAPI, tourAPI } from '../../services/api';
 import { formatCurrency, formatDate, supportStatusLabel } from '../../utils/formatters';
+import SystemSettingsEditor from './SystemSettingsEditor';
 
 function MiniBar({ label, value, max }) {
   const width = max > 0 ? Math.max(8, Math.round((value / max) * 100)) : 8;
@@ -25,22 +26,6 @@ export default function Dashboard() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [reply, setReply] = useState('');
   const [replyStatus, setReplyStatus] = useState('answered');
-  const [settingsForm, setSettingsForm] = useState({
-    company_name: '',
-    logo: '',
-    address: '',
-    hotline: '',
-    bank_name: '',
-    bank_code: '',
-    bank_account_number: '',
-    bank_account_name: '',
-    bank_branch: '',
-    payment_note_prefix: '',
-    cancellation_policy: '',
-    payment_methods: ['bank', 'momo', 'vnpay'],
-    featured_destinations: [],
-    banner_messages: [],
-  });
 
   const { data: stats } = useQuery({
     queryKey: ['admin-dashboard'],
@@ -65,31 +50,6 @@ export default function Dashboard() {
   const { data: supportPayload } = useQuery({
     queryKey: ['admin-supports', 'open'],
     queryFn: async () => (await adminAPI.supports({ status: 'open' })).data?.data ?? {},
-  });
-
-  useQuery({
-    queryKey: ['admin-settings'],
-    queryFn: async () => {
-      const payload = (await adminAPI.settings()).data?.data ?? {};
-      setSettingsForm({
-        company_name: payload.company_name || '',
-        logo: payload.logo || '',
-        address: payload.address || '',
-        hotline: payload.hotline || '',
-        bank_name: payload.bank_name || '',
-        bank_code: payload.bank_code || '',
-        bank_account_number: payload.bank_account_number || '',
-        bank_account_name: payload.bank_account_name || '',
-        bank_branch: payload.bank_branch || '',
-        payment_note_prefix: payload.payment_note_prefix || '',
-        cancellation_policy: payload.cancellation_policy || '',
-        payment_methods: payload.payment_methods || ['bank', 'momo', 'vnpay'],
-        featured_destinations: payload.featured_destinations || [],
-        banner_messages: payload.banner_messages || [],
-      });
-
-      return payload;
-    },
   });
 
   const approvePartnerMutation = useMutation({
@@ -122,14 +82,6 @@ export default function Dashboard() {
     },
   });
 
-  const updateSettingsMutation = useMutation({
-    mutationFn: (payload) => adminAPI.updateSettings(payload),
-    onSuccess: () => {
-      toast.success('Đã lưu cấu hình hệ thống.');
-      queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
-    },
-  });
-
   const bookings = bookingsPayload?.items || [];
   const tours = toursPayload?.items || [];
   const pendingPartners = partnersPayload?.items || [];
@@ -150,6 +102,9 @@ export default function Dashboard() {
           { label: 'Booking hôm nay', value: stats?.bookings_today ?? 0, tone: 'warning' },
           { label: 'Tour đang hoạt động', value: stats?.tours_active ?? 0, tone: 'success' },
           { label: 'Người dùng mới / 30 ngày', value: stats?.users_new_30_days ?? 0, tone: 'info' },
+          { label: 'Review / 30 ngày', value: stats?.reviews_30_days ?? 0, tone: 'primary' },
+          { label: 'Tổng review', value: stats?.reviews_total ?? 0, tone: 'secondary' },
+          { label: 'Điểm review TB', value: stats?.avg_review_rating ?? 0, tone: 'warning' },
           { label: 'Đối tác chờ duyệt', value: stats?.pending_partners ?? 0, tone: 'secondary' },
           { label: 'Ticket đang mở', value: stats?.open_support_tickets ?? 0, tone: 'danger' },
           { label: 'Tài khoản bị khóa', value: stats?.locked_users ?? 0, tone: 'dark' },
@@ -340,96 +295,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="bg-white border rounded-4 p-4 shadow-sm">
-        <div className="mb-4 d-flex justify-content-between gap-3">
-          <div>
-            <h2 className="h5 mb-1">Cấu hình hệ thống tối thiểu</h2>
-            <p className="mb-0 text-muted">Quản lý thông tin công ty, hotline, cổng thanh toán và chính sách hủy.</p>
-          </div>
-          <button type="button" className="btn btn-primary" onClick={() => updateSettingsMutation.mutate(settingsForm)}>
-            Lưu cấu hình
-          </button>
-        </div>
-        <div className="row g-3">
-          <div className="col-md-6">
-            <label className="form-label">Tên công ty</label>
-            <input className="form-control" value={settingsForm.company_name} onChange={(e) => setSettingsForm((v) => ({ ...v, company_name: e.target.value }))} />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Hotline</label>
-            <input className="form-control" value={settingsForm.hotline} onChange={(e) => setSettingsForm((v) => ({ ...v, hotline: e.target.value }))} />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Logo URL</label>
-            <input className="form-control" value={settingsForm.logo} onChange={(e) => setSettingsForm((v) => ({ ...v, logo: e.target.value }))} />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Địa chỉ</label>
-            <input className="form-control" value={settingsForm.address} onChange={(e) => setSettingsForm((v) => ({ ...v, address: e.target.value }))} />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Ngân hàng</label>
-            <input className="form-control" value={settingsForm.bank_name} onChange={(e) => setSettingsForm((v) => ({ ...v, bank_name: e.target.value }))} />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Mã ngân hàng (VD: VCB)</label>
-            <input className="form-control" value={settingsForm.bank_code} onChange={(e) => setSettingsForm((v) => ({ ...v, bank_code: e.target.value }))} />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Số tài khoản</label>
-            <input
-              className="form-control"
-              value={settingsForm.bank_account_number}
-              onChange={(e) => setSettingsForm((v) => ({ ...v, bank_account_number: e.target.value }))}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Chủ tài khoản</label>
-            <input
-              className="form-control"
-              value={settingsForm.bank_account_name}
-              onChange={(e) => setSettingsForm((v) => ({ ...v, bank_account_name: e.target.value }))}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Chi nhánh</label>
-            <input className="form-control" value={settingsForm.bank_branch} onChange={(e) => setSettingsForm((v) => ({ ...v, bank_branch: e.target.value }))} />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Tiền tố nội dung chuyển khoản</label>
-            <input
-              className="form-control"
-              value={settingsForm.payment_note_prefix}
-              onChange={(e) => setSettingsForm((v) => ({ ...v, payment_note_prefix: e.target.value }))}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Điểm đến nổi bật</label>
-            <input
-              className="form-control"
-              value={settingsForm.featured_destinations.join(', ')}
-              onChange={(e) => setSettingsForm((v) => ({ ...v, featured_destinations: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) }))}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label">Thông báo banner</label>
-            <input
-              className="form-control"
-              value={settingsForm.banner_messages.join(', ')}
-              onChange={(e) => setSettingsForm((v) => ({ ...v, banner_messages: e.target.value.split(',').map((item) => item.trim()).filter(Boolean) }))}
-            />
-          </div>
-          <div className="col-12">
-            <label className="form-label">Chính sách hủy tour</label>
-            <textarea
-              className="form-control"
-              rows="4"
-              value={settingsForm.cancellation_policy}
-              onChange={(e) => setSettingsForm((v) => ({ ...v, cancellation_policy: e.target.value }))}
-            />
-          </div>
-        </div>
-      </div>
+      <SystemSettingsEditor />
 
       <div className="modal fade" id="replySupportModal" tabIndex="-1" aria-hidden="true">
         <div className="modal-dialog modal-dialog-centered">

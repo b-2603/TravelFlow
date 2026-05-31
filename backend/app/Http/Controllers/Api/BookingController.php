@@ -66,12 +66,31 @@ class BookingController extends Controller
         $selectedDeparture = collect($tour->departures)->firstWhere('date', $departureDate);
         $unitPrice = $selectedDeparture['price_override'] ?? $tour->price_per_person;
 
+        $originalTotal = (float) $unitPrice * $numPax;
+        $pointsToUse = (int) ($request->input('points_to_use') ?? 0);
+        $user = $request->user();
+
+        if ($pointsToUse > 0) {
+            if ((int) ($user->reward_points ?? 0) < $pointsToUse) {
+                return $this->apiResponse(false, null, 'Số điểm bạn nhập lớn hơn điểm hiện có.', 422);
+            }
+            // Do not allow using more points than the original total price.
+            $pointsToUse = min($pointsToUse, (int) floor($originalTotal));
+            $user->useRewardPoints($pointsToUse);
+        }
+
+        $finalTotal = max(0.0, $originalTotal - $pointsToUse);
+
         $booking = Booking::create([
             'tour_id' => $tour->_id,
-            'user_id' => $request->user()->_id,
+            'user_id' => $user->_id,
             'departure_date' => Carbon::parse($departureDate),
             'num_pax' => $numPax,
-            'total_price' => $unitPrice * $numPax,
+            'original_total_price' => $originalTotal,
+            'total_price' => $finalTotal,
+            'points_used' => $pointsToUse,
+            'points_earned' => 0,
+            'rewarded_at' => null,
             'status' => 'pending',
             'passengers' => $passengers,
             'note' => $request->input('note'),
@@ -87,6 +106,9 @@ class BookingController extends Controller
             'detail' => [
                 'booking_id' => (string) $booking->_id,
                 'tour_id' => (string) $tour->_id,
+                'original_total' => $originalTotal,
+                'final_total' => $booking->total_price,
+                'points_used' => $booking->points_used ?? 0,
             ],
             'ip_address' => $request->ip(),
             'created_at' => Carbon::now(),

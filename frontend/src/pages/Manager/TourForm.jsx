@@ -6,9 +6,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { tourAPI } from '../../services/api';
 import FormikDateInput from '../../components/FormikDateInput';
 
-const tabs = ['basic', 'itinerary', 'departures', 'images'];
+const tabs = ['basic', 'details', 'itinerary', 'departures', 'images'];
 const tabLabels = {
   basic: 'Thông tin cơ bản',
+  details: 'Nội dung bổ sung',
   itinerary: 'Lịch trình',
   departures: 'Ngày khởi hành',
   images: 'Hình ảnh',
@@ -119,6 +120,16 @@ export default function TourForm() {
           status: editSeed?.status || 'draft',
           description: editSeed?.description || '',
           highlights: editSeed?.highlights?.length ? editSeed.highlights : [''],
+          destination_overview: editSeed?.destination_overview || '',
+          historical_background: editSeed?.historical_background || '',
+          local_culture: editSeed?.local_culture?.length ? editSeed.local_culture : [''],
+          best_time_to_visit: editSeed?.best_time_to_visit || '',
+          weather_notes: editSeed?.weather_notes || '',
+          included_services: editSeed?.included_services?.length ? editSeed.included_services : [''],
+          excluded_services: editSeed?.excluded_services?.length ? editSeed.excluded_services : [''],
+          suitable_for: editSeed?.suitable_for?.length ? editSeed.suitable_for : [''],
+          travel_tips: editSeed?.travel_tips?.length ? editSeed.travel_tips : [''],
+          meeting_point: editSeed?.meeting_point || '',
           linked_partner_ids: editSeed?.linked_partner_ids?.length ? editSeed.linked_partner_ids : [],
           itinerary: editSeed?.itinerary?.length ? editSeed.itinerary : [{ day: 1, title: '', description: '' }],
           departures: editSeed?.departures?.length
@@ -244,6 +255,152 @@ export default function TourForm() {
                       </div>
                     )}
                   </FieldArray>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'details' && (
+              <div className="row g-4">
+                <div className="col-lg-6">
+                  <div className="rounded-3 border p-3 h-100">
+                    <h3 className="h6 mb-3">Thông tin điểm đến</h3>
+                    <Field as="textarea" name="destination_overview" rows="5" className="form-control" placeholder="Mô tả ngắn về điểm đến, cảnh quan, trải nghiệm chính..." />
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <div className="rounded-3 border p-3 h-100">
+                    <h3 className="h6 mb-3">Lịch sử / bối cảnh</h3>
+                    <Field as="textarea" name="historical_background" rows="5" className="form-control" placeholder="Ghi chú về lịch sử, văn hóa, nguồn gốc hoặc câu chuyện địa phương..." />
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <div className="rounded-3 border p-3 h-100">
+                    <h3 className="h6 mb-3">Văn hóa địa phương</h3>
+                    <FieldArray name="local_culture">
+                      {({ push, remove }) => (
+                        <div className="d-grid gap-2">
+                          {values.local_culture.map((_, index) => (
+                            <div className="d-flex gap-2" key={index}>
+                              <Field name={`local_culture.${index}`} className="form-control" />
+                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
+                                Xóa
+                              </button>
+                            </div>
+                          ))}
+                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
+                            Thêm mục
+                          </button>
+                        </div>
+                      )}
+                    </FieldArray>
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <div className="rounded-3 border p-3 h-100 d-grid gap-3">
+                    <div>
+                      <h3 className="h6 mb-2">Thời điểm đẹp nhất để đi</h3>
+                      <Field name="best_time_to_visit" className="form-control" placeholder="Ví dụ: Tháng 3 đến tháng 8" />
+                    </div>
+                    <div>
+                      <h3 className="h6 mb-2">Ghi chú thời tiết</h3>
+                      <Field as="textarea" name="weather_notes" rows="4" className="form-control" placeholder="Lưu ý về khí hậu, mưa nắng, nhiệt độ..." />
+                    </div>
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <div className="rounded-3 border p-3 h-100">
+                    <h3 className="h6 mb-3">Dịch vụ bao gồm</h3>
+                    <FieldArray name="included_services">
+                      {({ push, remove }) => (
+                        <div className="d-grid gap-2">
+                          {values.included_services.map((_, index) => (
+                            <div className="d-flex gap-2" key={index}>
+                              <Field name={`included_services.${index}`} className="form-control" />
+                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
+                                Xóa
+                              </button>
+                            </div>
+                          ))}
+                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
+                            Thêm mục
+                          </button>
+                        </div>
+                      )}
+                    </FieldArray>
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <div className="rounded-3 border p-3 h-100">
+                    <h3 className="h6 mb-3">Dịch vụ không bao gồm</h3>
+                    <FieldArray name="excluded_services">
+                      {({ push, remove }) => (
+                        <div className="d-grid gap-2">
+                          {values.excluded_services.map((_, index) => (
+                            <div className="d-flex gap-2" key={index}>
+                              <Field name={`excluded_services.${index}`} className="form-control" />
+                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
+                                Xóa
+                              </button>
+                            </div>
+                          ))}
+                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
+                            Thêm mục
+                          </button>
+                        </div>
+                      )}
+                    </FieldArray>
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <div className="rounded-3 border p-3 h-100">
+                    <h3 className="h6 mb-3">Phù hợp với</h3>
+                    <FieldArray name="suitable_for">
+                      {({ push, remove }) => (
+                        <div className="d-grid gap-2">
+                          {values.suitable_for.map((_, index) => (
+                            <div className="d-flex gap-2" key={index}>
+                              <Field name={`suitable_for.${index}`} className="form-control" />
+                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
+                                Xóa
+                              </button>
+                            </div>
+                          ))}
+                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
+                            Thêm đối tượng
+                          </button>
+                        </div>
+                      )}
+                    </FieldArray>
+                  </div>
+                </div>
+                <div className="col-lg-6">
+                  <div className="rounded-3 border p-3 h-100">
+                    <h3 className="h6 mb-3">Điểm tập trung</h3>
+                    <Field name="meeting_point" className="form-control" placeholder="Ví dụ: Sân bay Đà Nẵng" />
+                    <div className="form-text">Mô tả rõ địa điểm tập trung hoặc điểm đón khách.</div>
+                  </div>
+                </div>
+                <div className="col-12">
+                  <div className="rounded-3 border p-3">
+                    <h3 className="h6 mb-3">Lưu ý khi đi tour</h3>
+                    <FieldArray name="travel_tips">
+                      {({ push, remove }) => (
+                        <div className="d-grid gap-2">
+                          {values.travel_tips.map((_, index) => (
+                            <div className="d-flex gap-2" key={index}>
+                              <Field name={`travel_tips.${index}`} className="form-control" />
+                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
+                                Xóa
+                              </button>
+                            </div>
+                          ))}
+                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
+                            Thêm lưu ý
+                          </button>
+                        </div>
+                      )}
+                    </FieldArray>
+                  </div>
                 </div>
               </div>
             )}

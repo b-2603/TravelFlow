@@ -20,7 +20,7 @@ class TourDepartureService
                         ? (float) $departure['price_override']
                         : null,
                     'status' => in_array(($departure['status'] ?? 'active'), ['active', 'paused'], true)
-                        ? $departure['status']
+                        ? ($departure['status'] ?? 'active')
                         : 'active',
                     'assigned_guide_id' => filled($departure['assigned_guide_id'] ?? null)
                         ? (string) $departure['assigned_guide_id']

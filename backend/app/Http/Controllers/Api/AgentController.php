@@ -198,6 +198,7 @@ class AgentController extends Controller
                 'pending' => $bookingStats->get('pending', 0),
                 'confirmed' => $bookingStats->get('confirmed', 0),
             ],
+            'recent_bookings' => BookingResource::collection($customer->bookings ?? collect()),
         ], 'Lấy thông tin khách hàng thành công.');
     }
 
@@ -241,7 +242,7 @@ class AgentController extends Controller
     public function showBooking(Request $request, string $id)
     {
         $agent = $request->user();
-        $booking = Booking::with(['tour', 'user', 'assignedAgent', 'payments', 'supportTickets'])
+        $booking = Booking::with(['tour', 'user', 'assignedAgent', 'payments', 'supportTickets.handledBy', 'review'])
             ->find($id);
 
         if (! $booking) {
@@ -535,13 +536,17 @@ class AgentController extends Controller
         return $this->apiResponse(true, [
             'items' => $tickets->getCollection()->map(function ($ticket) {
                 return [
+                    'id' => (string) $ticket->_id,
                     '_id' => (string) $ticket->_id,
                     'booking_id' => (string) $ticket->booking_id,
                     'booking_tour_title' => $ticket->booking->tour->title ?? null,
                     'customer_name' => $ticket->user->name ?? null,
                     'subject' => $ticket->subject,
+                    'message' => $ticket->message,
+                    'reply' => $ticket->reply,
                     'status' => $ticket->status,
                     'priority' => $ticket->priority,
+                    'handled_at' => optional($ticket->handled_at)->toISOString(),
                     'created_at' => $ticket->created_at,
                     'updated_at' => $ticket->updated_at,
                 ];
@@ -737,7 +742,7 @@ class AgentController extends Controller
             'title' => $validated['title'],
             'slug' => \Str::slug($validated['title']) . '-' . uniqid(),
             'destination' => $validated['destination'],
-            'duration' => $validated['duration'],
+            'duration_days' => $validated['duration'],
             'description' => $validated['description'] ?? null,
             'price_per_person' => $validated['estimated_price'],
             'category' => 'custom',
@@ -747,8 +752,9 @@ class AgentController extends Controller
             'images' => [],
             'departures' => $validated['preferred_date'] ? [[
                 'date' => $validated['preferred_date'],
-                'slots' => 1,
+                'available_slots' => 1,
                 'price_override' => $validated['estimated_price'],
+                'status' => 'active',
             ]] : [],
             'created_by' => $agent->_id,
             'is_custom' => true,

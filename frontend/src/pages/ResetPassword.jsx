@@ -1,8 +1,9 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { authAPI } from '../services/api';
+import { useState } from 'react';
+import * as Yup from 'yup';
 
 const schema = Yup.object({
   email: Yup.string().email('Email không hợp lệ').required('Vui lòng nhập email'),
@@ -23,7 +24,9 @@ export default function ResetPassword() {
         <div className="col-lg-6">
           <div className="rounded-4 border bg-white p-4 p-md-5 shadow-sm">
             <h1 className="h3 mb-3">Đặt lại mật khẩu</h1>
-            <p className="text-muted">Nhập email, mã đặt lại mật khẩu và mật khẩu mới để kích hoạt lại tài khoản.</p>
+            <p className="text-muted">
+              Mở link từ email, kiểm tra email và mã đặt lại đã được điền sẵn, sau đó nhập mật khẩu mới để hoàn tất.
+            </p>
 
             <Formik
               initialValues={{

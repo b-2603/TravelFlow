@@ -24,10 +24,10 @@ export default function MainLayout() {
   }, []);
 
   return (
-    <div className="tf-public-shell min-vh-100 d-flex flex-column">
+    <div className="tf-public-shell">
       {showAmbientScene ? <AmbientScene /> : null}
       <Navbar />
-      <main className="py-4 py-lg-5">
+      <main className="tf-public-main py-4 py-lg-5">
         <Outlet />
       </main>
       <SiteFooter />

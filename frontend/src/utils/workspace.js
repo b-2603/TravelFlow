@@ -3,8 +3,8 @@ export function getWorkspacePath(role) {
   if (role === 'tour_manager') return '/manager/tours';
   if (role === 'agent') return '/agent/dashboard';
   if (role === 'guide') return '/guide/dashboard';
-  if (role === 'partner') return '/partner/services';
-  if (role === 'accountant') return '/accountant/payments';
+  if (role === 'partner') return '/partner/dashboard';
+  if (role === 'accountant') return '/accountant/dashboard';
   if (role === 'customer') return '/my-bookings';
   return '/';
 }

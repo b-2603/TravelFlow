@@ -26,21 +26,22 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['required', 'email', 'max:255', 'unique:mongodb.users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:500'],
         ]);
 
         if ($validator->fails()) {
-            return $this->apiResponse(false, ['errors' => $validator->errors()], 'Dữ liệu không hợp lệ.', 422);
+            $errors = $validator->errors()->all();
+            return $this->apiResponse(false, ['errors' => $validator->errors()], $errors[0] ?? 'Dữ liệu không hợp lệ.', 422);
         }
 
         $user = User::create([
             'name' => $request->string('name')->toString(),
             'username' => $this->generateUsername($request->string('name')->toString()),
             'email' => strtolower($request->string('email')->toString()),
-            'password' => $request->string('password')->toString(),
+            'password' => Hash::make($request->string('password')->toString()),
             'phone' => $request->input('phone'),
             'address' => $request->input('address'),
             'role' => 'customer',
@@ -216,8 +217,20 @@ class AuthController extends Controller
         );
 
         $this->emailService->sendPasswordReset($email, $plainToken);
+        ActivityLog::create([
+            'user_id' => $user->_id,
+            'action' => 'forgot_password',
+            'module' => 'auth',
+            'detail' => [
+                'email' => $email,
+            ],
+            'ip_address' => $request->ip(),
+            'created_at' => Carbon::now(),
+        ]);
 
-        return $this->apiResponse(true, null, 'Nếu email tồn tại, hệ thống đã gửi hướng dẫn đặt lại mật khẩu.');
+        return $this->apiResponse(true, [
+            'email' => $email,
+        ], 'Nếu email tồn tại, hệ thống đã gửi hướng dẫn đặt lại mật khẩu đến hộp thư đã đăng ký. Hãy mở email và dùng link đặt lại để tiếp tục.');
     }
 
     public function resetPassword(Request $request)
@@ -249,9 +262,20 @@ class AuthController extends Controller
             return $this->apiResponse(false, null, 'Không tìm thấy người dùng.', 404);
         }
 
-        $user->password = $request->string('password')->toString();
+        $user->password = Hash::make($request->string('password')->toString());
         $user->save();
         $resetRecord->delete();
+
+        ActivityLog::create([
+            'user_id' => $user->_id,
+            'action' => 'reset_password',
+            'module' => 'auth',
+            'detail' => [
+                'email' => $email,
+            ],
+            'ip_address' => $request->ip(),
+            'created_at' => Carbon::now(),
+        ]);
 
         return $this->apiResponse(true, null, 'Đặt lại mật khẩu thành công.');
     }
@@ -262,6 +286,7 @@ class AuthController extends Controller
 
         if ($base === '') {
             $base = 'nguoi_dung';
+            $base = 'user_'.Str::lower(Str::random(4));
         }
 
         $username = Str::lower($base);

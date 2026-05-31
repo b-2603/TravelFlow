@@ -22,6 +22,7 @@ class StoreBookingRequest extends FormRequest
             'passengers.*.dob' => ['required', 'date'],
             'passengers.*.passport' => ['required', 'string', 'max:50'],
             'note' => ['nullable', 'string', 'max:1000'],
+            'points_to_use' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

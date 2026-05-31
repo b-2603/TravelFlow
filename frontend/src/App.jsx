@@ -8,17 +8,21 @@ const Dashboard = lazy(() => import('./pages/Admin/Dashboard'));
 const GuideAssignmentsAdmin = lazy(() => import('./pages/Admin/GuideAssignments'));
 const ActivityLog = lazy(() => import('./pages/Admin/ActivityLog'));
 const AdminBookings = lazy(() => import('./pages/Admin/Bookings'));
+const AdminReviews = lazy(() => import('./pages/Admin/ReviewModeration'));
 const TourApproval = lazy(() => import('./pages/Admin/TourApproval'));
 const UserManagement = lazy(() => import('./pages/Admin/UserManagement'));
 const AgentDashboard = lazy(() => import('./pages/Agent/Dashboard'));
 const AgentBookings = lazy(() => import('./pages/Agent/Bookings'));
 const AgentCustomers = lazy(() => import('./pages/Agent/Customers'));
 const AgentCreateBooking = lazy(() => import('./pages/Agent/CreateBooking'));
+const AgentSupportTickets = lazy(() => import('./pages/Agent/SupportTickets'));
+const AgentCustomTours = lazy(() => import('./pages/Agent/CustomTours'));
 const GuideDashboard = lazy(() => import('./pages/Guide/Dashboard'));
 const GuideNotifications = lazy(() => import('./pages/Guide/Notifications'));
 const GuideHistory = lazy(() => import('./pages/Guide/History'));
 const AssignmentDetail = lazy(() => import('./pages/Guide/AssignmentDetail'));
 const Payments = lazy(() => import('./pages/Accountant/Payments'));
+const AccountantDashboard = lazy(() => import('./pages/Accountant/Dashboard'));
 const Refunds = lazy(() => import('./pages/Accountant/Refunds'));
 const AccountantLogs = lazy(() => import('./pages/Accountant/Logs'));
 const Reports = lazy(() => import('./pages/Accountant/Reports'));
@@ -26,6 +30,9 @@ const Booking = lazy(() => import('./pages/Booking'));
 const BookingDetail = lazy(() => import('./pages/BookingDetail'));
 const BookingEdit = lazy(() => import('./pages/BookingEdit'));
 const Favorites = lazy(() => import('./pages/Favorites'));
+const CustomerDashboard = lazy(() => import('./pages/Customer/Dashboard'));
+const CustomerCompareTours = lazy(() => import('./pages/Customer/CompareTours'));
+const CustomerNotifications = lazy(() => import('./pages/Customer/Notifications'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const Assignments = lazy(() => import('./pages/Guide/Assignments'));
 const Home = lazy(() => import('./pages/Home'));
@@ -35,6 +42,7 @@ const TourListManager = lazy(() => import('./pages/Manager/TourListManager'));
 const MyBookings = lazy(() => import('./pages/MyBookings'));
 const MySupport = lazy(() => import('./pages/MySupport'));
 const PaymentCheckout = lazy(() => import('./pages/PaymentCheckout'));
+const PartnerDashboard = lazy(() => import('./pages/Partner/Dashboard'));
 const Services = lazy(() => import('./pages/Partner/Services'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Register = lazy(() => import('./pages/Register'));
@@ -66,8 +74,11 @@ export default function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           <Route element={<ProtectedRoute allowedRoles={['customer', 'admin', 'tour_manager', 'agent', 'guide', 'partner', 'accountant']} />}>
-            <Route path="/booking" element={<Booking />} />
-            <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/booking" element={<Booking />} />
+          <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+          <Route path="/compare-tours" element={<CustomerCompareTours />} />
+          <Route path="/customer/notifications" element={<CustomerNotifications />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/my-bookings/:id" element={<BookingDetail />} />
             <Route path="/my-bookings/:id/edit" element={<BookingEdit />} />
             <Route path="/payments/:id" element={<PaymentCheckout />} />
@@ -83,6 +94,7 @@ export default function App() {
               <Route path="/admin/dashboard" element={<Dashboard />} />
               <Route path="/admin/users" element={<UserManagement />} />
               <Route path="/admin/tours" element={<TourApproval />} />
+              <Route path="/admin/reviews" element={<AdminReviews />} />
               <Route path="/admin/guide-assignments" element={<GuideAssignmentsAdmin />} />
               <Route path="/admin/bookings" element={<AdminBookings />} />
               <Route path="/admin/logs" element={<ActivityLog />} />
@@ -99,6 +111,8 @@ export default function App() {
               <Route path="/agent/customers" element={<AgentCustomers />} />
               <Route path="/agent/bookings" element={<AgentBookings />} />
               <Route path="/agent/create-booking" element={<AgentCreateBooking />} />
+              <Route path="/agent/support-tickets" element={<AgentSupportTickets />} />
+              <Route path="/agent/custom-tours" element={<AgentCustomTours />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['guide']} />}>
@@ -111,10 +125,12 @@ export default function App() {
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['partner']} />}>
+              <Route path="/partner/dashboard" element={<PartnerDashboard />} />
               <Route path="/partner/services" element={<Services />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['accountant']} />}>
+              <Route path="/accountant/dashboard" element={<AccountantDashboard />} />
               <Route path="/accountant/payments" element={<Payments />} />
               <Route path="/accountant/refunds" element={<Refunds />} />
               <Route path="/accountant/logs" element={<AccountantLogs />} />

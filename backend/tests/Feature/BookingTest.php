@@ -120,7 +120,12 @@ class BookingTest extends TestCase
         ]);
 
         $response = $this->withHeader('Authorization', "Bearer {$token}")
-            ->postJson("/api/bookings/{$booking->_id}/cancel");
+            ->postJson("/api/bookings/{$booking->_id}/cancel", [
+                'reason' => 'Need to cancel due to schedule change.',
+                'refund_to_bank_name' => 'Bank of Vietnam',
+                'refund_to_account_number' => '1234567890',
+                'refund_to_account_name' => 'Booking Customer',
+            ]);
 
         $response->assertOk()
             ->assertJsonPath('data.status', 'cancelled');

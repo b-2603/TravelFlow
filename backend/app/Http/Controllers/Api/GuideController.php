@@ -52,6 +52,7 @@ class GuideController extends Controller
     public function dashboard(Request $request)
     {
         $guideId = (string) $request->user()->_id;
+        $today = Carbon::today()->toDateString();
 
         // Lấy tất cả tours và departure được phân công cho guide hiện tại
         $allTours = $this->getAssignedTours($guideId);
@@ -78,16 +79,50 @@ class GuideController extends Controller
 
         // Các tour sắp tới (3 tour gần nhất)
         $nextTours = $allTours->filter(function ($tour) use ($guideId) {
-            return collect($tour->departures ?? [])->contains(fn ($d) => 
-                (string) ($d['assigned_guide_id'] ?? '') === $guideId &&
-                Carbon::parse($d['date'])->isFuture()
-            );
+            return collect($tour->departures ?? [])->contains(function ($d) use ($guideId) {
+                return (string) ($d['assigned_guide_id'] ?? '') === $guideId &&
+                    Carbon::parse($d['date'])->isFuture();
+            });
         })->sortBy(function ($tour) use ($guideId) {
-            return collect($tour->departures ?? [])->first(fn ($d) => 
-                (string) ($d['assigned_guide_id'] ?? '') === $guideId &&
-                Carbon::parse($d['date'])->isFuture()
-            )['date'] ?? '9999-12-31';
+            $first = collect($tour->departures ?? [])->first(function ($d) use ($guideId) {
+                return (string) ($d['assigned_guide_id'] ?? '') === $guideId &&
+                    Carbon::parse($d['date'])->isFuture();
+            });
+
+            return $first['date'] ?? '9999-12-31';
         })->take(3)->values();
+
+        $todayTours = $allTours->flatMap(function ($tour) use ($guideId, $today) {
+            return collect($tour->departures ?? [])
+                ->filter(fn ($departure) => (string) ($departure['assigned_guide_id'] ?? '') === $guideId && ($departure['date'] ?? null) === $today)
+                ->map(function ($departure) use ($tour) {
+                    return [
+                        'id' => (string) $tour->_id,
+                        'title' => $tour->title,
+                        'destination' => $tour->destination,
+                        'departure_date' => $departure['date'] ?? null,
+                        'available_slots' => (int) ($departure['available_slots'] ?? 0),
+                        'status' => $departure['status'] ?? 'active',
+                    ];
+                });
+        })->values();
+
+        $recentUpdates = $allTours->flatMap(function ($tour) {
+            return collect($tour->guide_progress ?? [])
+                ->map(function ($item) use ($tour) {
+                    return [
+                        'tour_id' => (string) $tour->_id,
+                        'tour_title' => $tour->title,
+                        'status' => $item['status'] ?? null,
+                        'departure_date' => $item['departure_date'] ?? null,
+                        'day_number' => $item['day_number'] ?? null,
+                        'note' => $item['note'] ?? null,
+                        'day_note' => $item['day_note'] ?? null,
+                        'incident_type' => $item['incident_type'] ?? null,
+                        'updated_at' => $item['updated_at'] ?? null,
+                    ];
+                });
+        })->sortByDesc('updated_at')->take(5)->values();
 
         return $this->apiResponse(true, [
             'stats' => [
@@ -97,6 +132,7 @@ class GuideController extends Controller
                 'completed_tours' => $completed,
                 'total_pax_served' => (int) $totalPax,
             ],
+            'today_tours' => $todayTours,
             'next_tours' => $nextTours->map(function ($tour) use ($guideId) {
                 $nextDeparture = collect($tour->departures ?? [])->first(fn ($d) => 
                     (string) ($d['assigned_guide_id'] ?? '') === $guideId &&
@@ -110,6 +146,7 @@ class GuideController extends Controller
                     'duration_days' => $tour->duration_days,
                 ];
             }),
+            'recent_updates' => $recentUpdates,
         ], 'Lấy dashboard hướng dẫn viên thành công.');
     }
 

@@ -15,6 +15,7 @@ const refundFilters = [
 export default function Refunds() {
   const queryClient = useQueryClient();
   const [refundStatus, setRefundStatus] = useState('');
+  const [refundSearch, setRefundSearch] = useState('');
   const [selectedRefund, setSelectedRefund] = useState(null);
   const [refundNote, setRefundNote] = useState('');
   const [refundCompleteForm, setRefundCompleteForm] = useState({
@@ -29,8 +30,9 @@ export default function Refunds() {
   const refundParams = useMemo(
     () => ({
       ...(refundStatus ? { status: refundStatus } : {}),
+      ...(refundSearch ? { search: refundSearch } : {}),
     }),
-    [refundStatus],
+    [refundStatus, refundSearch],
   );
 
   const { data: refundPayload, isLoading: refundsLoading } = useQuery({
@@ -39,6 +41,7 @@ export default function Refunds() {
   });
 
   const refunds = refundPayload?.items || [];
+  const refundSummary = refundPayload?.summary || {};
 
   const refreshData = () => {
     queryClient.invalidateQueries({ queryKey: ['accountant-refunds'] });
@@ -117,6 +120,47 @@ export default function Refunds() {
           </div>
         </div>
 
+        <div className="row g-3 mb-4">
+          <div className="col-md-6 col-xl-3">
+            <div className="rounded-4 border bg-light-subtle p-3 h-100">
+              <div className="small text-muted mb-2">Tổng tiền yêu cầu</div>
+              <div className="fs-5 fw-semibold">{formatCurrency(refundSummary.total_requested_amount || 0)}</div>
+            </div>
+          </div>
+          <div className="col-md-6 col-xl-3">
+            <div className="rounded-4 border bg-light-subtle p-3 h-100">
+              <div className="small text-muted mb-2">Đang chờ duyệt</div>
+              <div className="fs-5 fw-semibold">{refundSummary.pending_count ?? 0}</div>
+            </div>
+          </div>
+          <div className="col-md-6 col-xl-3">
+            <div className="rounded-4 border bg-light-subtle p-3 h-100">
+              <div className="small text-muted mb-2">Đã duyệt</div>
+              <div className="fs-5 fw-semibold">{refundSummary.approved_count ?? 0}</div>
+            </div>
+          </div>
+          <div className="col-md-6 col-xl-3">
+            <div className="rounded-4 border bg-light-subtle p-3 h-100">
+              <div className="small text-muted mb-2">Đã hoàn tiền</div>
+              <div className="fs-5 fw-semibold">{refundSummary.refunded_count ?? 0}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="row g-3 mb-4">
+          <div className="col-lg-6">
+            <input
+              className="form-control"
+              value={refundSearch}
+              onChange={(e) => setRefundSearch(e.target.value)}
+              placeholder="Tìm theo lý do, ghi chú kế toán hoặc ghi chú xử lý..."
+            />
+          </div>
+          <div className="col-lg-6 text-lg-end small text-muted align-self-center">
+            Trung bình yêu cầu: {formatCurrency(refundSummary.average_requested_amount || 0)}
+          </div>
+        </div>
+
         <div className="table-responsive">
           <table className="table align-middle mb-0">
             <thead>
@@ -146,10 +190,19 @@ export default function Refunds() {
               ) : (
                 refunds.map((refund) => (
                   <tr key={refund.id}>
-                    <td>{refund.booking?.user?.name || '--'}</td>
-                    <td>{refund.booking?.tour?.title || '--'}</td>
+                    <td>
+                      <div className="fw-semibold">{refund.booking?.user?.name || '--'}</div>
+                      <div className="small text-muted text-break">{refund.booking?.user?.email || refund.booking?.user?.phone || '--'}</div>
+                    </td>
+                    <td>
+                      <div className="fw-semibold">{refund.booking?.tour?.title || '--'}</div>
+                      <div className="small text-muted">{refund.booking?.departure_date || '--'}</div>
+                    </td>
                     <td>{formatCurrency(refund.amount_requested)}</td>
-                    <td style={{ minWidth: 240 }}>{refund.reason || '--'}</td>
+                    <td style={{ minWidth: 240 }}>
+                      <div className="fw-semibold text-break">{refund.reason || '--'}</div>
+                      <div className="small text-muted">{refund.resolution_note || refund.preferred_resolution || '--'}</div>
+                    </td>
                     <td>
                       <span className={`badge ${statusBadgeClass(refund.status)}`}>{refundStatusLabel(refund.status)}</span>
                     </td>
@@ -203,6 +256,10 @@ export default function Refunds() {
                 <div className="d-flex justify-content-between">
                   <span>Booking</span>
                   <span className="fw-semibold">{selectedRefund?.booking?.id || '--'}</span>
+                </div>
+                <div className="d-flex justify-content-between">
+                  <span>Mã yêu cầu</span>
+                  <span className="fw-semibold">{selectedRefund?.id || '--'}</span>
                 </div>
                 <div className="d-flex justify-content-between">
                   <span>Ngày đi</span>
@@ -364,6 +421,9 @@ export default function Refunds() {
                   onChange={(e) => setRefundNote(e.target.value)}
                   placeholder="Nhập ghi chú xử lý, quyết định hoặc điều kiện hoàn tiền..."
                 />
+              </div>
+              <div className="mt-3 small text-muted">
+                {selectedRefund?.policy_snapshot ? 'Đã lưu snapshot chính sách tại thời điểm gửi yêu cầu.' : 'Không có snapshot chính sách.'}
               </div>
             </div>
             <div className="modal-footer">

@@ -79,4 +79,32 @@ class AuthTest extends TestCase
         $response->assertStatus(401)
             ->assertJsonPath('success', false);
     }
+
+    public function test_user_can_view_profile_after_login(): void
+    {
+        User::create([
+            'name' => 'Profile User',
+            'email' => 'profile@example.com',
+            'password' => 'Password@123',
+            'role' => 'customer',
+            'status' => 'active',
+        ]);
+
+        $loginResponse = $this->postJson('/api/auth/login', [
+            'email' => 'profile@example.com',
+            'password' => 'Password@123',
+        ]);
+
+        $loginResponse->assertOk()->assertJsonPath('success', true);
+
+        $token = $loginResponse->json('data.token');
+
+        $meResponse = $this->withHeaders([
+            'Authorization' => "Bearer {$token}",
+        ])->getJson('/api/auth/me');
+
+        $meResponse->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.user.email', 'profile@example.com');
+    }
 }

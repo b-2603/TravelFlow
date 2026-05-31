@@ -47,18 +47,13 @@ export default function Navbar() {
         </button>
 
         <div className="collapse navbar-collapse" id="mainNavbar">
-          <ul className="navbar-nav mx-auto mb-3 mb-lg-0 gap-lg-2">
+          <ul className="navbar-nav mx-auto mb-3 mb-lg-0 gap-lg-3 justify-content-lg-center">
             <li className="nav-item">
               <NavItem to="/">Trang chủ</NavItem>
             </li>
             <li className="nav-item">
               <NavItem to="/tours">Khám phá tour</NavItem>
             </li>
-            {isAuthenticated && role === 'customer' && (
-              <li className="nav-item">
-                <NavItem to="/favorites">Yêu thích</NavItem>
-              </li>
-            )}
             {showWorkspaceLink && (
               <li className="nav-item">
                 <NavItem to={workspacePath}>Khu vực làm việc</NavItem>
@@ -109,13 +104,23 @@ export default function Navbar() {
                     {role === 'customer' && (
                       <>
                         <li>
-                          <Link className="dropdown-item rounded-3" to="/my-support">
-                            Hỗ trợ của tôi
+                          <Link className="dropdown-item rounded-3" to="/customer/dashboard">
+                            Bảng tổng quan
+                          </Link>
+                        </li>
+                        <li>
+                          <Link className="dropdown-item rounded-3" to="/customer/notifications">
+                            Thông báo của tôi
                           </Link>
                         </li>
                         <li>
                           <Link className="dropdown-item rounded-3" to="/favorites">
                             Danh sách yêu thích
+                          </Link>
+                        </li>
+                        <li>
+                          <Link className="dropdown-item rounded-3" to="/my-support">
+                            Hỗ trợ của tôi
                           </Link>
                         </li>
                       </>

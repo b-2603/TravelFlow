@@ -8,9 +8,12 @@ class EmailService
 {
     public function sendPasswordReset(string $email, string $token): void
     {
+        $frontendUrl = rtrim((string) env('FRONTEND_URL', env('APP_URL', 'http://localhost')), '/');
+        $resetLink = $frontendUrl.'/reset-password?email='.urlencode($email).'&token='.urlencode($token);
+
         Log::info('Password reset token generated.', [
             'email' => $email,
-            'token' => $token,
+            'reset_link' => $resetLink,
         ]);
     }
 

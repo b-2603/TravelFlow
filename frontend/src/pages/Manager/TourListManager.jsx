@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { tourAPI } from '../../services/api';
@@ -17,10 +18,11 @@ function statusLabel(status) {
 
 export default function TourListManager() {
   const queryClient = useQueryClient();
+  const [filters, setFilters] = useState({ status: '', search: '' });
 
   const { data: payload } = useQuery({
-    queryKey: ['manager-tours'],
-    queryFn: async () => (await tourAPI.managerList()).data?.data ?? {},
+    queryKey: ['manager-tours', filters],
+    queryFn: async () => (await tourAPI.managerList(filters)).data?.data ?? {},
   });
 
   const tours = payload?.items || [];
@@ -33,6 +35,24 @@ export default function TourListManager() {
       queryClient.invalidateQueries({ queryKey: ['manager-tours'] });
     },
     onError: (error) => toast.error(error?.response?.data?.message || 'Không thể gửi tour chờ duyệt'),
+  });
+
+  const pinMutation = useMutation({
+    mutationFn: (id) => tourAPI.togglePin(id),
+    onSuccess: () => {
+      toast.success('Đã cập nhật trạng thái ghim tour');
+      queryClient.invalidateQueries({ queryKey: ['manager-tours'] });
+    },
+    onError: (error) => toast.error(error?.response?.data?.message || 'Không thể cập nhật trạng thái ghim'),
+  });
+
+  const duplicateMutation = useMutation({
+    mutationFn: (id) => tourAPI.duplicate(id),
+    onSuccess: () => {
+      toast.success('Đã nhân bản tour');
+      queryClient.invalidateQueries({ queryKey: ['manager-tours'] });
+    },
+    onError: (error) => toast.error(error?.response?.data?.message || 'Không thể nhân bản tour'),
   });
 
   return (
@@ -48,12 +68,40 @@ export default function TourListManager() {
       </div>
 
       <div className="row g-3 mb-4">
+        <div className="col-md-6">
+          <input
+            className="form-control"
+            placeholder="Tìm theo tên tour, điểm đến hoặc danh mục"
+            value={filters.search}
+            onChange={(e) => setFilters((value) => ({ ...value, search: e.target.value }))}
+          />
+        </div>
+        <div className="col-md-3">
+          <select className="form-select" value={filters.status} onChange={(e) => setFilters((value) => ({ ...value, status: e.target.value }))}>
+            <option value="">Tất cả trạng thái</option>
+            <option value="draft">Bản nháp</option>
+            <option value="pending">Chờ duyệt</option>
+            <option value="approved">Đã duyệt</option>
+            <option value="rejected">Từ chối</option>
+          </select>
+        </div>
+        <div className="col-md-3">
+          <button type="button" className="btn btn-outline-secondary w-100" onClick={() => setFilters({ status: '', search: '' })}>
+            Xóa bộ lọc
+          </button>
+        </div>
+      </div>
+
+      <div className="row g-3 mb-4">
         {[
           { label: 'Tổng tour', value: summary.total_tours ?? 0 },
           { label: 'Bản nháp', value: summary.draft_tours ?? 0 },
           { label: 'Chờ duyệt', value: summary.pending_tours ?? 0 },
           { label: 'Đã duyệt', value: summary.approved_tours ?? 0 },
+          { label: 'Từ chối', value: summary.rejected_tours ?? 0 },
+          { label: 'Tour ghim', value: summary.pinned_tours ?? 0 },
           { label: 'Booking', value: summary.total_bookings ?? 0 },
+          { label: 'Departure', value: summary.total_departures ?? 0 },
           { label: 'Doanh thu ước tính', value: formatCurrency(summary.estimated_revenue ?? 0) },
         ].map((item) => (
           <div className="col-md-4 col-xl-2" key={item.label}>
@@ -98,6 +146,7 @@ export default function TourListManager() {
                       {tour.promotion_type === 'percent' ? `Giảm ${tour.promotion_value}%` : `Giảm ${formatCurrency(tour.promotion_value)}`}
                     </div>
                   )}
+                  {tour.pinned && <div className="small text-warning">Tour ghim</div>}
                 </td>
                 <td>{tour.linked_partners?.length || 0}</td>
                 <td>{tour.summary?.fill_rate || 0}%</td>
@@ -107,6 +156,20 @@ export default function TourListManager() {
                     <Link to={`/manager/tours/${tour.id}/edit`} className="btn btn-outline-primary btn-sm">
                       Sửa
                     </Link>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary btn-sm"
+                      onClick={() => pinMutation.mutate(tour.id)}
+                    >
+                      {tour.pinned ? 'Bỏ ghim' : 'Ghim'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-info btn-sm"
+                      onClick={() => duplicateMutation.mutate(tour.id)}
+                    >
+                      Nhân bản
+                    </button>
                     {tour.status === 'draft' && (
                       <button type="button" className="btn btn-outline-success btn-sm" onClick={() => submitMutation.mutate(tour.id)}>
                         Gửi duyệt

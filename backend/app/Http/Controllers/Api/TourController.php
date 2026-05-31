@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\TourDepartureService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -81,7 +82,13 @@ class TourController extends Controller
         }
 
         $sort = $request->string('sort', 'latest')->toString();
-        $matchedTours = $query->with(['creator', 'guide'])->get();
+
+        try {
+            $matchedTours = $query->with(['creator', 'guide'])->get();
+        } catch (\MongoDB\Driver\Exception\Exception $e) {
+            Log::error('TourController@index MongoDB unavailable: '.$e->getMessage());
+            $matchedTours = collect();
+        }
 
         $sortedTours = match ($sort) {
             'price_asc' => $matchedTours->sortBy(fn ($tour) => $this->effectivePrice($tour))->values(),
@@ -167,7 +174,24 @@ class TourController extends Controller
             $query->where('created_by', $request->user()->_id);
         }
 
-        $tours = $query->paginate(20);
+        $filteredQuery = clone $query;
+
+        if ($request->filled('status')) {
+            $filteredQuery->where('status', $request->string('status')->toString());
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+            $filteredQuery->where(function ($builder) use ($search) {
+                $builder->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('destination', 'like', '%'.$search.'%')
+                    ->orWhere('category', 'like', '%'.$search.'%');
+            });
+        }
+
+        $summarySource = $filteredQuery->get();
+
+        $tours = $filteredQuery->paginate(20);
         $collection = collect($tours->items());
 
         return $this->apiResponse(true, [
@@ -179,12 +203,15 @@ class TourController extends Controller
                 'total' => $tours->total(),
             ],
             'summary' => [
-                'total_tours' => $collection->count(),
-                'pending_tours' => $collection->where('status', 'pending')->count(),
-                'approved_tours' => $collection->where('status', 'approved')->count(),
-                'draft_tours' => $collection->where('status', 'draft')->count(),
-                'total_bookings' => $collection->sum(fn ($tour) => Booking::where('tour_id', $tour->_id)->count()),
-                'estimated_revenue' => $collection->sum(function ($tour) {
+                'total_tours' => $summarySource->count(),
+                'pending_tours' => $summarySource->where('status', 'pending')->count(),
+                'approved_tours' => $summarySource->where('status', 'approved')->count(),
+                'draft_tours' => $summarySource->where('status', 'draft')->count(),
+                'rejected_tours' => $summarySource->where('status', 'rejected')->count(),
+                'pinned_tours' => $summarySource->where('pinned', true)->count(),
+                'total_departures' => $summarySource->sum(fn ($tour) => count($tour->departures ?? [])),
+                'total_bookings' => $summarySource->sum(fn ($tour) => Booking::where('tour_id', $tour->_id)->count()),
+                'estimated_revenue' => $summarySource->sum(function ($tour) {
                     return Booking::where('tour_id', $tour->_id)
                         ->whereIn('status', ['pending', 'confirmed', 'completed'])
                         ->sum('total_price');
@@ -276,6 +303,69 @@ class TourController extends Controller
         ]);
 
         return $this->apiResponse(true, null, 'Tour deleted successfully.');
+    }
+
+    public function togglePinned(Request $request, string $id)
+    {
+        $tour = Tour::where('_id', $id)->whereNull('deleted_at')->first();
+
+        if (! $tour) {
+            return $this->apiResponse(false, null, 'Tour not found.', 404);
+        }
+
+        if ($request->user()->role !== 'admin' && (string) $tour->created_by !== (string) $request->user()->_id) {
+            return $this->apiResponse(false, null, 'Forbidden.', 403);
+        }
+
+        $tour->pinned = ! (bool) ($tour->pinned ?? false);
+        $tour->save();
+
+        ActivityLog::create([
+            'user_id' => $request->user()->_id,
+            'action' => $tour->pinned ? 'tour_pinned' : 'tour_unpinned',
+            'module' => 'tours',
+            'detail' => ['tour_id' => (string) $tour->_id],
+            'ip_address' => $request->ip(),
+            'created_at' => Carbon::now(),
+        ]);
+
+        return $this->apiResponse(true, new TourResource($tour), $tour->pinned ? 'Tour pinned successfully.' : 'Tour unpinned successfully.');
+    }
+
+    public function duplicate(Request $request, string $id)
+    {
+        $tour = Tour::where('_id', $id)->whereNull('deleted_at')->first();
+
+        if (! $tour) {
+            return $this->apiResponse(false, null, 'Tour not found.', 404);
+        }
+
+        if ($request->user()->role !== 'admin' && (string) $tour->created_by !== (string) $request->user()->_id) {
+            return $this->apiResponse(false, null, 'Forbidden.', 403);
+        }
+
+        $copy = $tour->replicate();
+        $copy->slug = Str::slug($tour->title).'-copy-'.Str::lower(Str::random(6));
+        $copy->status = 'draft';
+        $copy->pinned = false;
+        $copy->approved_at = null;
+        $copy->reject_reason = null;
+        $copy->created_by = $request->user()->_id;
+        $copy->save();
+
+        ActivityLog::create([
+            'user_id' => $request->user()->_id,
+            'action' => 'tour_duplicated',
+            'module' => 'tours',
+            'detail' => [
+                'source_tour_id' => (string) $tour->_id,
+                'tour_id' => (string) $copy->_id,
+            ],
+            'ip_address' => $request->ip(),
+            'created_at' => Carbon::now(),
+        ]);
+
+        return $this->apiResponse(true, new TourResource($copy), 'Tour duplicated successfully.', 201);
     }
 
     public function approve(Request $request, string $id)

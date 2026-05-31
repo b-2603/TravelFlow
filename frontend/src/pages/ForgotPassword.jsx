@@ -1,4 +1,5 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { useState } from 'react';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import { authAPI } from '../services/api';
@@ -8,6 +9,9 @@ const schema = Yup.object({
 });
 
 export default function ForgotPassword() {
+  const [sentEmail, setSentEmail] = useState('');
+  const [done, setDone] = useState(false);
+
   return (
     <div className="container py-5">
       <div className="row justify-content-center">
@@ -15,7 +19,7 @@ export default function ForgotPassword() {
           <div className="rounded-4 border bg-white p-4 p-md-5 shadow-sm">
             <h1 className="h3 mb-3">Quên mật khẩu</h1>
             <p className="text-muted">
-              Nhập email đã đăng ký. Hệ thống sẽ tạo yêu cầu đặt lại mật khẩu và trả thông báo xác nhận.
+              Nhập email đã đăng ký. Hệ thống sẽ gửi link đặt lại mật khẩu đến đúng hộp thư đó.
             </p>
 
             <Formik
@@ -25,6 +29,8 @@ export default function ForgotPassword() {
                 try {
                   const response = await authAPI.forgotPassword(values);
                   toast.success(response.data?.message || 'Đã ghi nhận yêu cầu đặt lại mật khẩu');
+                  setSentEmail(response.data?.data?.email || values.email);
+                  setDone(true);
                   helpers.resetForm();
                 } catch (error) {
                   toast.error(error?.response?.data?.message || 'Không thể gửi yêu cầu');
@@ -43,6 +49,12 @@ export default function ForgotPassword() {
                 </button>
               </Form>
             </Formik>
+
+            {done && (
+              <div className="alert alert-success mt-4 mb-0">
+                <strong>Đã gửi:</strong> {sentEmail}. Hãy mở email, bấm vào link khôi phục, rồi nhập mật khẩu mới ở màn hình đặt lại mật khẩu.
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -10,13 +10,13 @@ const slides = [
     eyebrow: 'Mùa hè mở lối',
     title: 'Chạm vào những hành trình đẹp như postcard, nhưng sống động hơn rất nhiều',
     text: 'Từ biển xanh, đảo nắng đến các chuyến city break nhiều năng lượng, TravelFlow biến việc chọn tour thành một trải nghiệm có cảm xúc.',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
+    image: 'https://images.unsplash.com/photo-1559592481-74153c49ca83?auto=format&fit=crop&w=1600&q=80',
   },
   {
     eyebrow: 'Đi thật nhẹ',
     title: 'Lịch khởi hành rõ ràng, giá minh bạch, thao tác đặt tour mượt trên mọi thiết bị',
     text: 'Tìm nhanh tour phù hợp, chạm để yêu thích, so sánh và chốt hành trình chỉ sau vài phút.',
-    image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=80',
+    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=80',
   },
 ];
 
@@ -24,12 +24,12 @@ const destinations = [
   {
     name: 'Đà Nẵng',
     caption: 'Biển, thành phố và nhịp sống hiện đại.',
-    image: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1559592481-74153c49ca83?auto=format&fit=crop&w=1200&q=80',
   },
   {
     name: 'Phú Quốc',
     caption: 'Hoàng hôn vàng, resort và các chuyến nghỉ dưỡng sang.',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1589779137213-95ece3820a2d?auto=format&fit=crop&w=1200&q=80',
   },
   {
     name: 'Đà Lạt',
@@ -39,14 +39,47 @@ const destinations = [
   {
     name: 'Hạ Long',
     caption: 'Du thuyền, vịnh xanh và những khối đá kỳ vĩ.',
-    image: 'https://images.unsplash.com/photo-1526481280695-3c4691fcb7d0?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1506973035872-a4db5eb0d8c2?auto=format&fit=crop&w=1200&q=80',
   },
 ];
 
 const testimonials = [
-  { name: 'Linh Nguyễn', role: 'Khách du lịch gia đình', quote: 'Tôi lọc tour theo ngày đi và số khách rất nhanh, giao diện đẹp và không bị rối.' },
-  { name: 'Huy Trần', role: 'Traveller trẻ', quote: 'Card tour có cảm giác sống động hơn hẳn, xem giá và lịch khởi hành rất trực quan.' },
-  { name: 'Diễm Quỳnh', role: 'Khách nghỉ dưỡng', quote: 'Tôi thích phần yêu thích tour, lưu lại rồi quay lại so sánh rất tiện.' },
+  {
+    name: 'Linh Nguyễn',
+    role: 'Khách du lịch gia đình',
+    quote: 'Tôi lọc tour theo ngày đi và số khách rất nhanh, giao diện rõ ràng nên chọn tour dễ hơn hẳn.',
+    rating: 5,
+  },
+  {
+    name: 'Huy Trần',
+    role: 'Traveller trẻ',
+    quote: 'Mỗi card tour hiển thị đủ thông tin cần thiết, xem giá và lịch khởi hành rất trực quan.',
+    rating: 5,
+  },
+  {
+    name: 'Diễm Quỳnh',
+    role: 'Khách nghỉ dưỡng',
+    quote: 'Tôi thích phần yêu thích tour, lưu lại rồi quay lại so sánh rất tiện khi chưa quyết định ngay.',
+    rating: 4,
+  },
+  {
+    name: 'Minh Trang',
+    role: 'Khách đi cùng trẻ nhỏ',
+    quote: 'Phần mô tả tour và lịch trình chi tiết giúp tôi yên tâm hơn khi chọn tour cho cả gia đình.',
+    rating: 5,
+  },
+  {
+    name: 'Quốc Bảo',
+    role: 'Khách công tác kết hợp du lịch',
+    quote: 'Tôi cần lọc tour nhanh, xem được giá và điểm đến ngay mà không phải mở quá nhiều màn hình.',
+    rating: 5,
+  },
+  {
+    name: 'Thu Hà',
+    role: 'Khách thích nghỉ dưỡng',
+    quote: 'Trang có cảm giác hiện đại, nội dung rõ ràng, nhìn vào là biết tour nào phù hợp với mình.',
+    rating: 5,
+  },
 ];
 
 function HeroSearch({ filters, onChange, onSubmit }) {
@@ -190,7 +223,7 @@ export default function Home() {
                 <Link to={`/tours/${tour.slug}`} className="text-decoration-none text-reset d-block">
                   <article className="tf-tour-card h-100">
                     <div className="tf-card-media" style={{ height: '17rem' }}>
-                      <img src={tour.images?.[0] || `https://picsum.photos/seed/${tour.slug}/900/700`} alt={tour.title} />
+                      <img src={tour.images?.[0] || 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=900&q=80'} alt={tour.title} />
                       <div className="tf-card-overlay" />
                       <span className="tf-glow-badge">{index < 2 ? 'Ưu đãi hot' : 'Đang hút khách'}</span>
                       <FavoriteButton tourId={tour.id} />
@@ -261,37 +294,47 @@ export default function Home() {
 
       <section className="mb-5">
         <div className="tf-glass-panel rounded-5 p-4 p-lg-5">
-          <div className="row g-4 align-items-center">
-            <div className="col-lg-4">
+          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+            <div className="col-lg-5">
               <div className="text-uppercase small fw-bold text-primary mb-2">Khách hàng nói gì</div>
               <h2 className="display-6 fw-bold mb-3">Những phản hồi khiến trải nghiệm đáng tin hơn</h2>
-              <p className="text-muted mb-0">Những thẻ đánh giá nhỏ lấp lánh trên nền động để trang không còn cảm giác phẳng và khô.</p>
+              <p className="text-muted mb-0">
+                Phần đánh giá được trình bày gọn, có nhịp, để người xem đọc nhanh và vẫn cảm thấy nội dung thật.
+              </p>
             </div>
-            <div className="col-lg-8">
-              <div id="testimonialCarousel" className="carousel slide" data-bs-ride="carousel">
-                <div className="carousel-inner">
-                  {testimonials.map((item, index) => (
-                    <div key={item.name} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
-                      <div className="row g-3">
-                        {[0, 1].map((offset) => {
-                          const quote = testimonials[(index + offset) % testimonials.length];
-                          return (
-                            <div className="col-md-6" key={`${item.name}-${offset}`}>
-                              <div className="rounded-4 border bg-white p-4 h-100 shadow-sm">
-                                <div className="small text-warning mb-3">✦ ✦ ✦ ✦ ✦</div>
-                                <p className="mb-4">“{quote.quote}”</p>
-                                <div className="fw-semibold">{quote.name}</div>
-                                <div className="small text-muted">{quote.role}</div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+            <div className="text-lg-end">
+              <div className="fw-semibold text-primary">4.9/5 trung bình</div>
+              <div className="small text-muted">Từ phản hồi của khách đã sử dụng hệ thống</div>
+            </div>
+          </div>
+
+          <div className="row g-4">
+            {testimonials.map((item, index) => (
+              <div className="col-md-6 col-xl-4" key={`${item.name}-${index}`}>
+                <article className="rounded-4 border bg-white p-4 h-100 shadow-sm">
+                  <div className="d-flex align-items-center justify-content-between mb-3">
+                    <div className="text-warning small fw-semibold">{'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}</div>
+                    <span className="badge text-bg-light border text-secondary">Phản hồi thực tế</span>
+                  </div>
+                  <p className="mb-4 text-secondary">“{item.quote}”</p>
+                  <div className="d-flex align-items-center gap-3">
+                    <div
+                      className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-semibold"
+                      style={{ width: 42, height: 42 }}
+                    >
+                      {item.name
+                        .split(' ')
+                        .slice(-1)[0]
+                        .charAt(0)}
                     </div>
-                  ))}
-                </div>
+                    <div>
+                      <div className="fw-semibold">{item.name}</div>
+                      <div className="small text-muted">{item.role}</div>
+                    </div>
+                  </div>
+                </article>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>

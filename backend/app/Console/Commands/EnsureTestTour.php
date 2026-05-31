@@ -44,12 +44,35 @@ class EnsureTestTour extends Command
             'promotion_value' => 0,
             'images' => [
                 'https://picsum.photos/seed/tour-test-thanh-toan-1000-vnd/1200/800',
+                'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
             ],
             'highlights' => [
                 'Giá trị thấp để test thanh toán',
                 'Dễ tìm trong danh sách tour',
                 'Không ảnh hưởng tour thật',
             ],
+            'destination_overview' => 'Tour kiểm thử nội bộ, mô phỏng cấu trúc một tour thật để kiểm tra luồng hiển thị và thanh toán.',
+            'historical_background' => 'Không áp dụng cho tour kiểm thử.',
+            'local_culture' => [
+                'Dữ liệu giả lập để kiểm thử giao diện',
+                'Không dùng cho vận hành thực tế',
+            ],
+            'best_time_to_visit' => 'Bất kỳ thời điểm nào trong môi trường kiểm thử.',
+            'weather_notes' => 'Không áp dụng.',
+            'included_services' => [
+                'Dữ liệu kiểm thử giả lập',
+                'Lịch trình demo',
+                'Ảnh minh hoạ',
+            ],
+            'excluded_services' => [
+                'Không áp dụng cho đặt tour thật',
+            ],
+            'suitable_for' => ['Kiểm thử nội bộ'],
+            'travel_tips' => [
+                'Không dùng tour này để chạy chiến dịch thật',
+                'Dùng để kiểm tra luồng đặt chỗ / thanh toán',
+            ],
+            'meeting_point' => 'Môi trường kiểm thử',
             'itinerary' => [
                 [
                     'day' => 1,

@@ -36,7 +36,7 @@ export default function Profile() {
       return URL.createObjectURL(avatarFile);
     }
 
-    return profile?.avatar || 'https://i.pravatar.cc/240';
+    return profile?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&background=0a5c86&color=fff&size=240`;
   }, [avatarFile, profile?.avatar]);
 
   const updateMutation = useMutation({

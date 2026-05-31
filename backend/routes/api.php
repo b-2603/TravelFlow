@@ -78,6 +78,7 @@ Route::middleware('jwt')->group(function () {
     });
 
     Route::middleware('role:customer|admin')->prefix('customer')->group(function () {
+        Route::get('/dashboard', [CustomerController::class, 'dashboard']);
         Route::get('/favorites', [CustomerController::class, 'favorites']);
         Route::post('/favorites/{tourId}', [CustomerController::class, 'addFavorite']);
         Route::delete('/favorites/{tourId}', [CustomerController::class, 'removeFavorite']);
@@ -91,6 +92,8 @@ Route::middleware('jwt')->group(function () {
         Route::get('/manager/tours', [TourController::class, 'managerIndex']);
         Route::get('/manager/meta', [TourController::class, 'managerMeta']);
         Route::post('/manager/tours/{id}/submit', [TourController::class, 'submitForApproval']);
+        Route::post('/manager/tours/{id}/toggle-pin', [TourController::class, 'togglePinned']);
+        Route::post('/manager/tours/{id}/duplicate', [TourController::class, 'duplicate']);
         Route::post('/tours', [TourController::class, 'store']);
         Route::put('/tours/{id}', [TourController::class, 'update']);
         Route::delete('/tours/{id}', [TourController::class, 'destroy']);
@@ -103,6 +106,7 @@ Route::middleware('jwt')->group(function () {
     });
 
     Route::middleware('role:accountant|admin')->group(function () {
+        Route::get('/accountant/dashboard', [PaymentController::class, 'dashboard']);
         Route::get('/payments', [PaymentController::class, 'index']);
         Route::post('/payments/{id}/confirm', [PaymentController::class, 'confirm']);
         Route::get('/accountant/logs', [AdminController::class, 'logs']);
@@ -137,6 +141,7 @@ Route::middleware('jwt')->group(function () {
         Route::post('/partners/{id}/reject', [AdminController::class, 'rejectPartner']);
         Route::get('/supports', [AdminController::class, 'supports']);
         Route::post('/supports/{id}/reply', [AdminController::class, 'replySupport']);
+        Route::get('/reviews', [AdminController::class, 'reviews']);
         Route::get('/settings', [AdminController::class, 'settings']);
         Route::put('/settings', [AdminController::class, 'updateSettings']);
         Route::post('/tours/{id}/approve', [TourController::class, 'approve']);
@@ -174,10 +179,13 @@ Route::middleware('jwt')->group(function () {
     });
 
     Route::middleware('role:partner|admin')->prefix('partner')->group(function () {
+        Route::get('/dashboard', [PartnerController::class, 'dashboard']);
         Route::get('/services', [PartnerController::class, 'services']);
         Route::put('/profile', [PartnerController::class, 'updateProfile']);
         Route::post('/services', [PartnerController::class, 'storeService']);
         Route::put('/services/{id}', [PartnerController::class, 'updateService']);
+        Route::post('/services/{id}/toggle-status', [PartnerController::class, 'toggleServiceStatus']);
+        Route::delete('/services/{id}', [PartnerController::class, 'deleteService']);
     });
 
     Route::middleware('role:agent|admin')->prefix('agent')->group(function () {

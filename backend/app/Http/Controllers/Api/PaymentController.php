@@ -29,7 +29,7 @@ class PaymentController extends Controller
 
     public function index(Request $request)
     {
-        $query = Payment::with(['booking.tour', 'user'])->orderByDesc('created_at');
+        $query = Payment::with(['booking.tour', 'booking.user', 'user'])->orderByDesc('created_at');
 
         if ($request->filled('status')) {
             $status = $request->string('status')->toString();
@@ -58,10 +58,20 @@ class PaymentController extends Controller
             $query->whereBetween('created_at', [$start, $end]);
         }
 
+        $summaryPayments = (clone $query)->get();
         $payments = $query->paginate(20);
         $collection = collect($payments->items());
-        $successful = $collection->where('status', 'success');
-        $refunded = $collection->where('status', 'refunded');
+        $successful = $summaryPayments->where('status', 'success');
+        $refunded = $summaryPayments->where('status', 'refunded');
+        $pending = $summaryPayments->whereIn('status', ['pending', 'submitted']);
+        $partial = $summaryPayments->where('status', 'partial');
+        $methods = $summaryPayments->groupBy('method')->map(function ($items, $method) {
+            return [
+                'method' => $method,
+                'count' => $items->count(),
+                'amount' => (float) $items->sum('amount'),
+            ];
+        })->values();
 
         return $this->apiResponse(true, [
             'items' => PaymentResource::collection($collection),
@@ -72,14 +82,104 @@ class PaymentController extends Controller
                 'total' => $payments->total(),
             ],
             'summary' => [
-                'total_amount' => (float) $collection->sum('amount'),
+                'total_amount' => (float) $summaryPayments->sum('amount'),
                 'successful_amount' => (float) $successful->sum('amount'),
                 'refunded_amount' => (float) $refunded->sum('amount'),
-                'pending_count' => $collection->where('status', 'pending')->count(),
+                'pending_amount' => (float) $pending->sum('amount'),
+                'partial_amount' => (float) $partial->sum('amount'),
+                'pending_count' => $pending->count(),
                 'success_count' => $successful->count(),
+                'partial_count' => $partial->count(),
                 'refunded_count' => $refunded->count(),
+                'methods' => $methods,
             ],
         ], 'Lấy danh sách thanh toán thành công.');
+    }
+
+    public function dashboard(Request $request)
+    {
+        $month = $request->string('month', Carbon::now()->format('Y-m'))->toString();
+        $data = $this->buildFinanceReportData($month);
+        $start = Carbon::parse($month.'-01')->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+
+        $monthPayments = Payment::with(['booking.tour', 'booking.user', 'user'])
+            ->whereBetween('created_at', [$start, $end])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $monthRefundRequests = RefundRequest::with(['booking.tour', 'booking.user', 'booking.payments'])
+            ->whereBetween('created_at', [$start, $end])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $recentPayments = Payment::with(['booking.tour', 'booking.user', 'user'])
+            ->orderByDesc('created_at')
+            ->limit(8)
+            ->get();
+
+        $recentRefunds = RefundRequest::with(['booking.tour', 'booking.user', 'booking.payments'])
+            ->orderByDesc('created_at')
+            ->limit(8)
+            ->get();
+
+        $monthlyTrend = collect(range(5, 0))->map(function ($offset) {
+            $monthStart = now()->copy()->startOfMonth()->subMonths($offset);
+            $monthEnd = $monthStart->copy()->endOfMonth();
+            $payments = Payment::whereBetween('created_at', [$monthStart, $monthEnd])->get();
+            $refundRequests = RefundRequest::whereBetween('created_at', [$monthStart, $monthEnd])->get();
+
+            return [
+                'label' => $monthStart->format('m/Y'),
+                'revenue' => (float) $payments->where('status', 'success')->sum('amount'),
+                'refunds' => (float) $payments->where('status', 'refunded')->sum('amount'),
+                'requests' => $refundRequests->count(),
+            ];
+        })->values();
+
+        return $this->apiResponse(true, [
+            'month' => $month,
+            'summary' => [
+                'revenue' => $data['summary']['revenue'],
+                'refund_total' => $data['summary']['refund_total'],
+                'service_cost' => $data['summary']['service_cost'],
+                'profit' => $data['summary']['profit'],
+                'bookings_count' => $data['summary']['bookings_count'],
+                'refund_requests_count' => $data['summary']['refund_requests_count'],
+                'net_revenue' => max(0, $data['summary']['revenue'] - $data['summary']['refund_total']),
+                'pending_payments_count' => $monthPayments->whereIn('status', ['pending', 'submitted'])->count(),
+                'success_payments_count' => $monthPayments->where('status', 'success')->count(),
+                'refund_requests_pending' => $monthRefundRequests->where('status', 'pending')->count(),
+                'refund_requests_approved' => $monthRefundRequests->where('status', 'approved')->count(),
+            ],
+            'breakdown' => [
+                'payment_methods' => $monthPayments->groupBy('method')->map(function ($items, $method) {
+                    return [
+                        'method' => $method,
+                        'count' => $items->count(),
+                        'amount' => (float) $items->sum('amount'),
+                    ];
+                })->values(),
+                'payment_statuses' => $monthPayments->groupBy('status')->map(function ($items, $status) {
+                    return [
+                        'status' => $status,
+                        'count' => $items->count(),
+                        'amount' => (float) $items->sum('amount'),
+                    ];
+                })->values(),
+                'refund_statuses' => $monthRefundRequests->groupBy('status')->map(function ($items, $status) {
+                    return [
+                        'status' => $status,
+                        'count' => $items->count(),
+                        'amount' => (float) $items->sum('amount_requested'),
+                    ];
+                })->values(),
+                'monthly_trend' => $monthlyTrend,
+            ],
+            'recent_payments' => PaymentResource::collection($recentPayments),
+            'recent_refunds' => RefundRequestResource::collection($recentRefunds),
+            'liabilities' => $data['liabilities'],
+        ], 'Lấy tổng quan kế toán thành công.');
     }
 
     public function store(StorePaymentRequest $request)
@@ -135,7 +235,7 @@ class PaymentController extends Controller
 
     public function show(Request $request, string $id)
     {
-        $payment = Payment::with(['booking.tour', 'user'])->find($id);
+        $payment = Payment::with(['booking.tour', 'booking.user', 'booking.payments', 'user'])->find($id);
 
         if (! $payment) {
             return $this->apiResponse(false, null, 'Không tìm thấy thanh toán.', 404);
@@ -329,7 +429,19 @@ class PaymentController extends Controller
             $query->where('status', $request->string('status')->toString());
         }
 
+        if ($request->filled('search')) {
+            $search = mb_strtolower($request->string('search')->toString());
+            $query->where(function ($builder) use ($search) {
+                $builder->where('reason', 'like', '%'.$search.'%')
+                    ->orWhere('admin_note', 'like', '%'.$search.'%')
+                    ->orWhere('resolution_note', 'like', '%'.$search.'%');
+            });
+        }
+
+        $summaryRefunds = (clone $query)->get();
+
         $refunds = $query->paginate(20);
+        $statusGroups = $summaryRefunds->groupBy('status');
 
         return $this->apiResponse(true, [
             'items' => RefundRequestResource::collection($refunds->getCollection()),
@@ -338,6 +450,18 @@ class PaymentController extends Controller
                 'last_page' => $refunds->lastPage(),
                 'per_page' => $refunds->perPage(),
                 'total' => $refunds->total(),
+            ],
+            'summary' => [
+                'total_requested_amount' => (float) $summaryRefunds->sum('amount_requested'),
+                'approved_amount' => (float) $summaryRefunds->where('status', 'approved')->sum('amount_requested'),
+                'refunded_amount' => (float) $summaryRefunds->where('status', 'refunded')->sum('refunded_amount'),
+                'pending_count' => $statusGroups->get('pending', collect())->count(),
+                'approved_count' => $statusGroups->get('approved', collect())->count(),
+                'refunded_count' => $statusGroups->get('refunded', collect())->count(),
+                'rejected_count' => $statusGroups->get('rejected', collect())->count(),
+                'average_requested_amount' => $summaryRefunds->count() > 0
+                    ? (float) $summaryRefunds->avg('amount_requested')
+                    : 0,
             ],
         ], 'Lấy danh sách yêu cầu hoàn tiền thành công.');
     }
@@ -498,7 +622,13 @@ class PaymentController extends Controller
         return $this->apiResponse(true, [
             'month' => $data['month'],
             'summary' => $data['summary'],
-        ], 'Lấy báo cáo tài chính thành công.');
+            'breakdown' => [
+                'payment_methods' => $data['payment_methods'],
+                'payment_statuses' => $data['payment_statuses'],
+                'refund_statuses' => $data['refund_statuses'],
+            ],
+            'monthly_trend' => $data['monthly_trend'],
+            ], 'Lấy báo cáo tài chính thành công.');
     }
 
     public function exportFinanceReport(Request $request)
@@ -575,6 +705,40 @@ class PaymentController extends Controller
         $revenue = (float) $payments->where('status', 'success')->sum('amount');
         $refundTotal = (float) $payments->where('status', 'refunded')->sum('amount');
         $serviceCost = (float) $liabilities->sum('payable_amount');
+        $paymentMethods = $payments->groupBy('method')->map(function ($items, $method) {
+            return [
+                'method' => $method,
+                'count' => $items->count(),
+                'amount' => (float) $items->sum('amount'),
+            ];
+        })->values();
+        $paymentStatuses = $payments->groupBy('status')->map(function ($items, $status) {
+            return [
+                'status' => $status,
+                'count' => $items->count(),
+                'amount' => (float) $items->sum('amount'),
+            ];
+        })->values();
+        $refundStatuses = $refunds->groupBy('status')->map(function ($items, $status) {
+            return [
+                'status' => $status,
+                'count' => $items->count(),
+                'amount' => (float) $items->sum('amount_requested'),
+            ];
+        })->values();
+        $monthlyTrend = collect(range(5, 0))->map(function ($offset) {
+            $monthStart = now()->copy()->startOfMonth()->subMonths($offset);
+            $monthEnd = $monthStart->copy()->endOfMonth();
+            $payments = Payment::whereBetween('created_at', [$monthStart, $monthEnd])->get();
+            $refundRequests = RefundRequest::whereBetween('created_at', [$monthStart, $monthEnd])->get();
+
+            return [
+                'label' => $monthStart->format('m/Y'),
+                'revenue' => (float) $payments->where('status', 'success')->sum('amount'),
+                'refunds' => (float) $payments->where('status', 'refunded')->sum('amount'),
+                'requests' => $refundRequests->count(),
+            ];
+        })->values();
 
         return [
             'month' => $month,
@@ -586,6 +750,10 @@ class PaymentController extends Controller
                 'bookings_count' => $bookings->count(),
                 'refund_requests_count' => $refunds->count(),
             ],
+            'payment_methods' => $paymentMethods,
+            'payment_statuses' => $paymentStatuses,
+            'refund_statuses' => $refundStatuses,
+            'monthly_trend' => $monthlyTrend,
             'liabilities' => $liabilities->values()->all(),
         ];
     }
@@ -636,11 +804,30 @@ class PaymentController extends Controller
             $booking->payment_status = 'unpaid';
         }
 
+        $oldPaymentStatus = $booking->payment_status;
+
         if ($netPaid > 0 && $booking->status === 'pending') {
             $booking->status = 'confirmed';
         }
 
+        // Persist booking status and payment status first
         $booking->save();
+
+        // Award loyalty points once when booking becomes fully paid
+        if ($oldPaymentStatus !== 'paid' && $booking->payment_status === 'paid' && empty($booking->rewarded_at)) {
+            $originalAmount = (float) ($booking->original_total_price ?? $booking->total_price);
+            $points = (int) floor($originalAmount * 0.05);
+            if ($points > 0) {
+                $booking->points_earned = $points;
+                $booking->rewarded_at = Carbon::now();
+                $booking->save();
+
+                if ($booking->user) {
+                    $booking->user->addRewardPoints($points);
+                    $booking->user->addSpending($originalAmount);
+                }
+            }
+        }
 
         if ($sendConfirmationEmail && $booking->user?->email) {
             $this->emailService->sendBookingConfirmation($booking->user->email, [

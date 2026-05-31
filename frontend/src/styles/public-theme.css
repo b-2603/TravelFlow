@@ -20,12 +20,17 @@ body {
 
 .tf-public-shell {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
 }
 
-.tf-public-shell main {
+.tf-public-main {
   position: relative;
-  z-index: 2;
+  z-index: 1;
+  min-height: 0;
+  padding-bottom: 4rem;
 }
 
 .tf-public-navbar {
@@ -551,12 +556,17 @@ body {
 }
 
 .tf-footer {
-  position: relative;
-  z-index: 2;
+  margin-top: 4rem;
   background:
     linear-gradient(135deg, rgba(10, 92, 134, 0.98), rgba(13, 39, 66, 0.96)),
     radial-gradient(circle at top right, rgba(255, 200, 87, 0.28), transparent 22%);
   color: #eff7ff;
+}
+
+.tf-site-footer {
+  clear: both;
+  position: relative;
+  z-index: 1;
 }
 
 .tf-footer-link {
@@ -700,7 +710,7 @@ body {
 }
 
 @media (max-width: 767.98px) {
-  .tf-public-shell main {
+  .tf-public-main {
     overflow-x: hidden;
   }
 

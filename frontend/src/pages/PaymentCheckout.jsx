@@ -17,6 +17,11 @@ function buildVietQrUrl({ bankCode, accountNumber, accountName, amount, addInfo 
   return `${base}?${params.toString()}`;
 }
 
+function buildQrImageUrl(text) {
+  if (!text) return '';
+  return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(text)}`;
+}
+
 export default function PaymentCheckout() {
   const { id } = useParams();
   const queryClient = useQueryClient();
@@ -165,6 +170,8 @@ export default function PaymentCheckout() {
     amount: Math.round(paymentSummary.dueAmount),
     addInfo: transferNote,
   });
+  const paymentTitle = 'Thanh toán chuyển khoản';
+  const paymentBadge = 'QR';
 
   return (
     <div className="container py-4 py-lg-5">
@@ -220,8 +227,8 @@ export default function PaymentCheckout() {
         <div className="col-lg-5">
           <div className="rounded-4 border bg-white p-4 shadow-sm">
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <h2 className="h5 mb-0">Thanh toán chuyển khoản</h2>
-              <span className="badge bg-primary-subtle text-primary">QR</span>
+              <h2 className="h5 mb-0">{paymentTitle}</h2>
+              <span className="badge bg-primary-subtle text-primary">{paymentBadge}</span>
             </div>
 
             <div className="mb-3 d-flex justify-content-between">
@@ -264,7 +271,9 @@ export default function PaymentCheckout() {
 
                 <div className="text-center mb-3">
                   <img src={qrUrl} alt="QR thanh toán" className="img-fluid rounded-3 border" style={{ maxWidth: 260 }} />
-                  <div className="small text-muted mt-2">Quét mã QR để điền sẵn số tiền và nội dung chuyển khoản</div>
+                  <div className="small text-muted mt-2">
+                    Quét mã QR để điền sẵn số tiền và nội dung chuyển khoản
+                  </div>
                 </div>
 
                 <div className="rounded-3 border p-3 small">

@@ -15,7 +15,7 @@ class StorePaymentRequest extends FormRequest
     {
         return [
             'booking_id' => ['required', 'string'],
-            'method' => ['required', 'in:cash,bank,momo,vnpay'],
+            'method' => ['required', 'in:bank,vnpay'],
             'payment_scope' => ['nullable', 'in:deposit,full'],
             'amount' => ['nullable', 'numeric', 'min:0'],
         ];

@@ -27,6 +27,10 @@ class User extends MongoAuthenticatable implements Authenticatable, JwtSubject
         'role_name_vi',
         'status',
         'address',
+        // Loyalty fields
+        'annual_spending',
+        'annual_spending_year',
+        'reward_points',
     ];
 
     protected $hidden = [
@@ -38,6 +42,9 @@ class User extends MongoAuthenticatable implements Authenticatable, JwtSubject
         'email_verified_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'annual_spending' => 'float',
+        'annual_spending_year' => 'integer',
+        'reward_points' => 'integer',
     ];
 
     public static function roleNameMap(): array
@@ -140,5 +147,50 @@ class User extends MongoAuthenticatable implements Authenticatable, JwtSubject
             'role_name_vi' => $this->role_name_vi,
             'name' => $this->name,
         ];
+    }
+
+    /**
+     * Return current year's annual spending (auto-reset if year changed).
+     */
+    public function getAnnualSpendingAttribute($value)
+    {
+        $year = (int) ($this->annual_spending_year ?? 0);
+        if ($year !== (int) now()->format('Y')) {
+            return 0.0;
+        }
+
+        return (float) ($value ?? 0.0);
+    }
+
+    public function addSpending(float $amount): void
+    {
+        $year = (int) now()->format('Y');
+        $currentYear = (int) ($this->annual_spending_year ?? 0);
+        if ($currentYear !== $year) {
+            $this->annual_spending = 0.0;
+            $this->annual_spending_year = $year;
+        }
+
+        $this->annual_spending = (float) ($this->annual_spending ?? 0) + $amount;
+        $this->save();
+    }
+
+    public function addRewardPoints(int $points): void
+    {
+        $this->reward_points = (int) ($this->reward_points ?? 0) + $points;
+        $this->save();
+    }
+
+    public function useRewardPoints(int $points): bool
+    {
+        $available = (int) ($this->reward_points ?? 0);
+        if ($points <= 0 || $points > $available) {
+            return false;
+        }
+
+        $this->reward_points = $available - $points;
+        $this->save();
+
+        return true;
     }
 }

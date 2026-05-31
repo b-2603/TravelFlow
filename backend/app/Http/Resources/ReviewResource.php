@@ -30,6 +30,17 @@ class ReviewResource extends JsonResource
                     ? (Str::startsWith((string) $this->user->avatar, ['http://', 'https://']) ? $this->user->avatar : url($this->user->avatar))
                     : null,
             ]),
+            'tour' => $this->whenLoaded('tour', fn () => [
+                'id' => (string) $this->tour->_id,
+                'title' => $this->tour->title,
+                'destination' => $this->tour->destination,
+                'slug' => $this->tour->slug,
+            ]),
+            'booking' => $this->whenLoaded('booking', fn () => [
+                'id' => (string) $this->booking->_id,
+                'departure_date' => optional($this->booking->departure_date)->toDateString(),
+                'status' => $this->booking->status,
+            ]),
             'created_at' => optional($this->created_at)->toISOString(),
         ];
     }

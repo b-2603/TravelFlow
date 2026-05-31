@@ -10,7 +10,9 @@ export default function GuideDashboard() {
   });
 
   const stats = payload.stats || {};
+  const todayTours = payload.today_tours || [];
   const nextTours = payload.next_tours || [];
+  const recentUpdates = payload.recent_updates || [];
 
   return (
     <div className="d-grid gap-4">
@@ -56,6 +58,44 @@ export default function GuideDashboard() {
       <section className="rounded-4 border bg-white p-4 shadow-sm">
         <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
           <div>
+            <h2 className="h5 mb-1">Tour trong ngày</h2>
+            <p className="mb-0 text-muted">Các chuyến cần xử lý ngay hôm nay.</p>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="py-5 text-center text-muted">Đang tải dữ liệu...</div>
+        ) : todayTours.length === 0 ? (
+          <div className="py-5 text-center text-muted">Hôm nay không có chuyến nào được phân công.</div>
+        ) : (
+          <div className="row g-3">
+            {todayTours.map((tour) => (
+              <div className="col-md-6" key={`${tour.id}-${tour.departure_date}`}>
+                <div className="rounded-4 border p-3 h-100">
+                  <div className="d-flex justify-content-between gap-2 align-items-start">
+                    <div>
+                      <h3 className="h6 mb-1">{tour.title}</h3>
+                      <div className="small text-muted">{tour.destination}</div>
+                    </div>
+                    <span className="badge bg-primary">Hôm nay</span>
+                  </div>
+                  <div className="small text-muted mt-3">Khởi hành: {formatDate(tour.departure_date)}</div>
+                  <div className="small text-muted">Slot còn lại: {tour.available_slots ?? 0}</div>
+                  <div className="mt-3">
+                    <Link to={`/guide/assignments/${tour.id}/${tour.departure_date}`} className="btn btn-sm btn-outline-primary">
+                      Mở workspace
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-4 border bg-white p-4 shadow-sm">
+        <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+          <div>
             <h2 className="h5 mb-1">Tour phân công sắp tới</h2>
             <p className="mb-0 text-muted">Xem nhanh những chuyến tour chuẩn bị khởi hành để sẵn sàng.</p>
           </div>
@@ -87,6 +127,33 @@ export default function GuideDashboard() {
                     </Link>
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-4 border bg-white p-4 shadow-sm">
+        <div className="mb-4">
+          <h2 className="h5 mb-1">Cập nhật gần nhất</h2>
+          <p className="mb-0 text-muted">Các thay đổi tiến trình gần đây nhất từ chuyến bạn phụ trách.</p>
+        </div>
+
+        {recentUpdates.length === 0 ? (
+          <div className="py-5 text-center text-muted">Chưa có cập nhật nào.</div>
+        ) : (
+          <div className="d-grid gap-3">
+            {recentUpdates.map((item, index) => (
+              <div key={`${item.tour_id}-${item.updated_at}-${index}`} className="rounded-3 bg-light p-3">
+                <div className="d-flex justify-content-between gap-2">
+                  <strong>{item.tour_title}</strong>
+                  <span className="small text-muted">{formatDate(item.updated_at)}</span>
+                </div>
+                <div className="small text-muted">Trạng thái: {item.status || '--'}</div>
+                <div className="small text-muted">Ngày khởi hành: {item.departure_date || '--'}</div>
+                {item.note ? <div className="mt-2">{item.note}</div> : null}
+                {item.day_note ? <div className="small text-muted mt-1">Ghi chú cuối ngày: {item.day_note}</div> : null}
+                {item.incident_type ? <div className="small text-danger mt-1">Sự cố: {item.incident_type}</div> : null}
               </div>
             ))}
           </div>

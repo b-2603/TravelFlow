@@ -21,6 +21,8 @@ class UserResource extends JsonResource
             'role_name_vi' => $this->role_name_vi,
             'status' => $this->status,
             'address' => $this->address,
+            'annual_spending' => (float) ($this->annual_spending ?? 0),
+            'reward_points' => (int) ($this->reward_points ?? 0),
             'created_at' => optional($this->created_at)->toISOString(),
             'updated_at' => optional($this->updated_at)->toISOString(),
         ];

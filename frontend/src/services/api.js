@@ -81,6 +81,8 @@ export const tourAPI = {
   managerList: (params) => api.get('/manager/tours', { params }),
   managerMeta: () => api.get('/manager/meta'),
   submitForApproval: (id) => api.post(`/manager/tours/${id}/submit`),
+  togglePin: (id) => api.post(`/manager/tours/${id}/toggle-pin`),
+  duplicate: (id) => api.post(`/manager/tours/${id}/duplicate`),
   create: (payload) => api.post('/tours', payload),
   update: (id, payload) => {
     if (payload instanceof FormData) {
@@ -126,6 +128,7 @@ export const paymentAPI = {
 };
 
 export const customerAPI = {
+  dashboard: () => api.get('/customer/dashboard'),
   favorites: () => api.get('/customer/favorites'),
   addFavorite: (tourId) => api.post(`/customer/favorites/${tourId}`),
   removeFavorite: (tourId) => api.delete(`/customer/favorites/${tourId}`),
@@ -151,6 +154,9 @@ export const adminAPI = {
   rejectPartner: (id) => api.post(`/admin/partners/${id}/reject`),
   supports: (params) => api.get('/admin/supports', { params }),
   replySupport: (id, payload) => api.post(`/admin/supports/${id}/reply`, payload),
+  reviews: (params) => api.get('/admin/reviews', { params }),
+  approveReview: (id) => api.post(`/admin/reviews/${id}/approve`),
+  deleteReview: (id) => api.delete(`/admin/reviews/${id}`),
   settings: () => api.get('/admin/settings'),
   updateSettings: (payload) => api.put('/admin/settings', payload),
   approveTour: (id) => api.post(`/admin/tours/${id}/approve`),
@@ -160,6 +166,7 @@ export const adminAPI = {
 };
 
 export const accountantAPI = {
+  dashboard: (params) => api.get('/accountant/dashboard', { params }),
   logs: (params) => api.get('/accountant/logs', { params }),
 };
 
@@ -181,6 +188,7 @@ export const guideAPI = {
 };
 
 export const partnerAPI = {
+  dashboard: () => api.get('/partner/dashboard'),
   services: () => api.get('/partner/services'),
   updateProfile: (payload) => {
     if (payload instanceof FormData) {
@@ -192,13 +200,26 @@ export const partnerAPI = {
   },
   createService: (payload) => api.post('/partner/services', payload),
   updateService: (id, payload) => api.put(`/partner/services/${id}`, payload),
+  toggleServiceStatus: (id) => api.post(`/partner/services/${id}/toggle-status`),
+  deleteService: (id) => api.delete(`/partner/services/${id}`),
 };
 
 export const agentAPI = {
   dashboard: () => api.get('/agent/dashboard'),
+  stats: (params) => api.get('/agent/stats', { params }),
   tours: (params) => api.get('/agent/tours', { params }),
+  showTour: (id) => api.get(`/agent/tours/${id}`),
   customers: (params) => api.get('/agent/customers', { params }),
+  showCustomer: (id) => api.get(`/agent/customers/${id}`),
   bookings: (params) => api.get('/agent/bookings', { params }),
+  showBooking: (id) => api.get(`/agent/bookings/${id}`),
   createBooking: (payload) => api.post('/agent/bookings', payload),
   updateBooking: (id, payload) => api.put(`/agent/bookings/${id}`, payload),
+  confirmPassengerInfo: (id, payload) => api.post(`/agent/bookings/${id}/confirm-passenger`, payload),
+  processCancellation: (id, payload) => api.post(`/agent/bookings/${id}/cancel`, payload),
+  sendReminder: (id, payload) => api.post(`/agent/bookings/${id}/send-reminder`, payload),
+  supportTickets: (params) => api.get('/agent/support-tickets', { params }),
+  replySupportTicket: (ticketId, payload) => api.post(`/agent/support-tickets/${ticketId}/reply`, payload),
+  createCustomTour: (payload) => api.post('/agent/custom-tours', payload),
+  personalStats: (params) => api.get('/agent/stats', { params }),
 };

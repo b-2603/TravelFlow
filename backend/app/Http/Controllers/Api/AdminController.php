@@ -9,12 +9,14 @@ use App\Http\Requests\SupportReplyRequest;
 use App\Http\Requests\SystemSettingUpdateRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\ActivityLogResource;
+use App\Http\Resources\ReviewResource;
 use App\Http\Resources\TourResource;
 use App\Http\Resources\UserResource;
 use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\Partner;
 use App\Models\Payment;
+use App\Models\Review;
 use App\Models\SupportTicket;
 use App\Models\SystemSetting;
 use App\Models\Tour;
@@ -47,6 +49,9 @@ class AdminController extends Controller
             'bookings_today' => Booking::where('created_at', '>=', $today)->count(),
             'tours_active' => Tour::where('status', 'approved')->whereNull('deleted_at')->count(),
             'users_new_30_days' => User::where('created_at', '>=', $thirtyDaysAgo)->count(),
+            'reviews_total' => Review::count(),
+            'reviews_30_days' => Review::where('created_at', '>=', $thirtyDaysAgo)->count(),
+            'avg_review_rating' => round((float) (Review::avg('rating') ?? 0), 1),
             'pending_partners' => Partner::where('status', 'pending')->count(),
             'open_support_tickets' => SupportTicket::where('status', 'open')->count(),
             'locked_users' => User::where('status', 'locked')->count(),
@@ -263,7 +268,17 @@ class AdminController extends Controller
             $query->whereBetween('created_at', [$date->copy()->startOfDay(), $date->copy()->endOfDay()]);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+            $query->where(function ($builder) use ($search) {
+                $builder->where('action', 'like', '%'.$search.'%')
+                    ->orWhere('module', 'like', '%'.$search.'%')
+                    ->orWhere('ip_address', 'like', '%'.$search.'%');
+            });
+        }
+
         $logs = $query->paginate(50);
+        $summary = (clone $query)->get();
 
         return $this->apiResponse(true, [
             'items' => ActivityLogResource::collection($logs->getCollection()),
@@ -272,6 +287,13 @@ class AdminController extends Controller
                 'last_page' => $logs->lastPage(),
                 'per_page' => $logs->perPage(),
                 'total' => $logs->total(),
+            ],
+            'summary' => [
+                'total' => $summary->count(),
+                'payments' => $summary->where('module', 'payments')->count(),
+                'refunds' => $summary->where('module', 'refunds')->count(),
+                'bookings' => $summary->where('module', 'bookings')->count(),
+                'emails' => $summary->where('module', 'emails')->count(),
             ],
         ], 'Lấy nhật ký hoạt động thành công.');
     }
@@ -511,6 +533,50 @@ class AdminController extends Controller
         return $this->apiResponse(true, ['items' => $items], 'Lấy danh sách ticket hỗ trợ thành công.');
     }
 
+    public function reviews(Request $request)
+    {
+        $query = Review::with(['user', 'tour', 'booking'])->orderByDesc('created_at');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status')->toString());
+        }
+
+        if ($request->filled('rating')) {
+            $query->where('rating', (int) $request->input('rating'));
+        }
+
+        $items = $query->get();
+
+        if ($request->filled('tour')) {
+            $tourSearch = mb_strtolower($request->string('tour')->toString());
+            $items = $items->filter(function ($review) use ($tourSearch) {
+                $title = mb_strtolower((string) ($review->tour?->title ?? ''));
+                $destination = mb_strtolower((string) ($review->tour?->destination ?? ''));
+
+                return str_contains($title, $tourSearch) || str_contains($destination, $tourSearch);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = mb_strtolower($request->string('search')->toString());
+            $items = $items->filter(function ($review) use ($search) {
+                $title = mb_strtolower((string) ($review->title ?? ''));
+                $comment = mb_strtolower((string) ($review->comment ?? ''));
+                $tourTitle = mb_strtolower((string) ($review->tour?->title ?? ''));
+                $userName = mb_strtolower((string) ($review->user?->name ?? ''));
+
+                return str_contains($title, $search)
+                    || str_contains($comment, $search)
+                    || str_contains($tourTitle, $search)
+                    || str_contains($userName, $search);
+            });
+        }
+
+        return $this->apiResponse(true, [
+            'items' => ReviewResource::collection($items->values()),
+        ], 'Lấy danh sách đánh giá thành công.');
+    }
+
     public function replySupport(SupportReplyRequest $request, string $id)
     {
         $ticket = SupportTicket::find($id);
@@ -558,7 +624,7 @@ class AdminController extends Controller
                 'bank_account_name' => 'NGUYEN TRAN THAI BAO',
                 'bank_branch' => '',
                 'payment_note_prefix' => 'BOOKING',
-                'payment_methods' => ['bank', 'momo', 'vnpay'],
+                'payment_methods' => ['bank', 'vnpay'],
                 'cancellation_policy' => [
                     'tiers' => [
                         [
@@ -613,6 +679,9 @@ class AdminController extends Controller
                 'email_templates' => [
                     'booking_confirmation' => 'Xác nhận booking thành công',
                     'refund_notice' => 'Thông báo hoàn tiền',
+                    'support_reply' => 'Phản hồi ticket hỗ trợ',
+                    'tour_approval' => 'Thông báo duyệt tour',
+                    'partner_approval' => 'Thông báo duyệt đối tác',
                 ],
                 'featured_destinations' => ['Đà Nẵng', 'Phú Quốc', 'Đà Lạt'],
                 'banner_messages' => ['Ưu đãi hè 2026', 'Đặt sớm giữ giá tốt'],
@@ -637,7 +706,7 @@ class AdminController extends Controller
             'bank_account_name' => 'NGUYEN TRAN THAI BAO',
             'bank_branch' => '',
             'payment_note_prefix' => 'BOOKING',
-            'payment_methods' => ['bank', 'momo', 'vnpay'],
+            'payment_methods' => ['bank', 'vnpay'],
         ];
 
         if (! $settings) {

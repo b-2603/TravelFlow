@@ -2,6 +2,7 @@ import { FieldArray, Formik, Form, Field, ErrorMessage } from 'formik';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
+import { useLocation } from 'react-router-dom';
 import { agentAPI } from '../../services/api';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import FormikDateInput from '../../components/FormikDateInput';
@@ -23,6 +24,9 @@ const schema = Yup.object({
 });
 
 export default function AgentCreateBooking() {
+  const location = useLocation();
+  const preselectedCustomerId = location.state?.customerId || '';
+
   const { data: customersPayload } = useQuery({
     queryKey: ['agent-customers-for-create'],
     queryFn: async () => (await agentAPI.customers()).data?.data ?? {},
@@ -51,7 +55,7 @@ export default function AgentCreateBooking() {
 
       <Formik
         initialValues={{
-          customer_id: '',
+          customer_id: preselectedCustomerId,
           tour_id: '',
           departure_date: '',
           note: '',

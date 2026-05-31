@@ -9,11 +9,6 @@ import FormikDateInput from '../components/FormikDateInput';
 
 const PAYMENT_METHOD_OPTIONS = [
   {
-    label: 'MoMo',
-    value: 'momo',
-    description: 'Thanh toán nhanh bằng ví MoMo, phù hợp cho người dùng điện thoại.',
-  },
-  {
     label: 'VNPay',
     value: 'vnpay',
     description: 'Thanh toán qua app ngân hàng hoặc quet QR trên cổng VNPay.',
@@ -110,7 +105,7 @@ export default function Booking() {
       <Formik
         initialValues={{
           note: '',
-          payment_method: 'momo',
+          payment_method: 'vnpay',
           payment_scope: 'deposit',
           passengers: initialPassengers,
         }}

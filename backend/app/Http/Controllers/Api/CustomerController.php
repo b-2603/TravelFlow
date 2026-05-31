@@ -7,10 +7,12 @@ use App\Http\Requests\StoreRefundRequest;
 use App\Http\Requests\StoreSupportTicketRequest;
 use App\Http\Resources\FavoriteTourResource;
 use App\Http\Resources\RefundRequestResource;
+use App\Http\Resources\BookingResource;
 use App\Http\Resources\SupportTicketResource;
 use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\FavoriteTour;
+use App\Models\Payment;
 use App\Models\RefundRequest;
 use App\Models\SupportTicket;
 use App\Models\Tour;
@@ -19,6 +21,63 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
+    public function dashboard(Request $request)
+    {
+        $userId = $request->user()->_id;
+
+        $bookings = Booking::where('user_id', $userId)
+            ->with(['tour', 'payments', 'review', 'refundRequests', 'supportTickets.handledBy'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $favoriteTours = FavoriteTour::where('user_id', $userId)
+            ->with(['tour.creator', 'tour.guide'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $supportTickets = SupportTicket::where('user_id', $userId)
+            ->with(['booking.tour', 'handledBy'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $refundRequests = RefundRequest::where('user_id', $userId)
+            ->with(['booking.tour'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $today = Carbon::today();
+        $upcomingBookings = $bookings
+            ->filter(fn (Booking $booking) => in_array($booking->status, ['pending', 'confirmed'], true) && optional($booking->departure_date)->greaterThanOrEqualTo($today))
+            ->sortBy('departure_date')
+            ->values();
+
+        $successPayments = Payment::where('user_id', $userId)
+            ->where('status', 'success')
+            ->get();
+
+        $summary = [
+            'total_bookings' => $bookings->count(),
+            'upcoming_bookings' => $upcomingBookings->count(),
+            'completed_bookings' => $bookings->where('status', 'completed')->count(),
+            'favorite_tours' => $favoriteTours->count(),
+            'open_supports' => $supportTickets->whereIn('status', ['open', 'in_progress'])->count(),
+            'pending_refunds' => $refundRequests->whereIn('status', ['pending', 'approved'])->count(),
+            'total_spent' => (float) $successPayments->sum('amount'),
+        ];
+
+        $payload = [
+            'summary' => $summary,
+            'next_trip' => $this->formatBookingSummary($upcomingBookings->first()),
+            'recent_bookings' => BookingResource::collection($bookings->take(5))->resolve(),
+            'favorite_tours' => FavoriteTourResource::collection($favoriteTours->take(5))->resolve(),
+            'support_tickets' => SupportTicketResource::collection($supportTickets->take(5))->resolve(),
+            'refund_requests' => RefundRequestResource::collection($refundRequests->take(5))->resolve(),
+            'recent_activity' => $this->buildRecentActivity($bookings, $supportTickets, $refundRequests),
+        ];
+
+        return $this->apiResponse(true, $payload, 'Lấy tổng quan khách hàng thành công.');
+    }
+
     public function favorites(Request $request)
     {
         $favorites = FavoriteTour::where('user_id', $request->user()->_id)
@@ -153,5 +212,67 @@ class CustomerController extends Controller
         ]);
 
         return $this->apiResponse(true, new RefundRequestResource($refund->load(['booking.tour'])), 'Gửi yêu cầu hoàn tiền thành công.', 201);
+    }
+
+    private function formatBookingSummary(?Booking $booking): ?array
+    {
+        if (! $booking) {
+            return null;
+        }
+
+        $paidTotal = (float) $booking->payments->where('status', 'success')->sum('amount');
+        $refundedTotal = (float) $booking->payments->where('status', 'refunded')->sum('amount');
+        $netPaid = max(0, $paidTotal - $refundedTotal);
+        $remainingAmount = max(0, (float) $booking->total_price - $netPaid);
+
+        return [
+            'id' => (string) $booking->_id,
+            'tour' => $booking->tour ? [
+                'id' => (string) $booking->tour->_id,
+                'title' => $booking->tour->title,
+                'slug' => $booking->tour->slug,
+                'destination' => $booking->tour->destination,
+            ] : null,
+            'departure_date' => optional($booking->departure_date)->toDateString(),
+            'status' => $booking->status,
+            'payment_status' => $booking->payment_status,
+            'total_price' => (float) $booking->total_price,
+            'remaining_amount' => $remainingAmount,
+            'num_pax' => $booking->num_pax,
+        ];
+    }
+
+    private function buildRecentActivity($bookings, $supportTickets, $refundRequests): array
+    {
+        $activities = collect();
+
+        foreach ($bookings->take(3) as $booking) {
+            $activities->push([
+                'type' => 'booking',
+                'title' => $booking->tour?->title ?? 'Đơn đặt tour',
+                'description' => 'Booking ' . $booking->status,
+                'date' => optional($booking->created_at)->toISOString(),
+            ]);
+        }
+
+        foreach ($supportTickets->take(2) as $ticket) {
+            $activities->push([
+                'type' => 'support',
+                'title' => $ticket->subject,
+                'description' => 'Hỗ trợ ' . $ticket->status,
+                'date' => optional($ticket->created_at)->toISOString(),
+            ]);
+        }
+
+        foreach ($refundRequests->take(2) as $refund) {
+            $activities->push([
+                'type' => 'refund',
+                'title' => $refund->booking?->tour?->title ?? 'Hoàn tiền',
+                'description' => 'Yêu cầu hoàn tiền ' . $refund->status,
+                'date' => optional($refund->created_at)->toISOString(),
+            ]);
+        }
+
+        return $activities->sortByDesc('date')->take(6)->values()->all();
     }
 }

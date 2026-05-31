@@ -54,6 +54,7 @@ function assignmentStateClass(state) {
 export default function Assignments() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('all');
+  const [search, setSearch] = useState('');
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [status, setStatus] = useState('scheduled');
   const [note, setNote] = useState('');
@@ -71,12 +72,14 @@ export default function Assignments() {
   });
 
   const filteredAssignments = useMemo(() => {
-    if (activeTab === 'all') {
-      return assignments;
-    }
+    return assignments.filter((item) => {
+      const matchesState = activeTab === 'all' || item.assignment_state === activeTab;
+      const haystack = `${item.tour_title || ''} ${item.destination || ''} ${item.category || ''}`.toLowerCase();
+      const matchesSearch = !search || haystack.includes(search.toLowerCase());
 
-    return assignments.filter((item) => item.assignment_state === activeTab);
-  }, [activeTab, assignments]);
+      return matchesState && matchesSearch;
+    });
+  }, [activeTab, assignments, search]);
 
   const summary = useMemo(
     () => ({
@@ -148,6 +151,20 @@ export default function Assignments() {
                 {tab.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="row g-3 mb-4">
+          <div className="col-lg-8">
+            <input
+              className="form-control"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Tìm theo tên tour, điểm đến hoặc nhóm tour..."
+            />
+          </div>
+          <div className="col-lg-4 text-lg-end align-self-center small text-muted">
+            {filteredAssignments.length} kết quả
           </div>
         </div>
 

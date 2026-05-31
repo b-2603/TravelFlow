@@ -37,8 +37,13 @@ export default function Reports() {
   });
 
   const report = reportPayload?.summary || {};
+  const breakdown = reportPayload?.breakdown || {};
+  const trend = reportPayload?.monthly_trend || [];
   const liabilities = liabilitiesPayload?.items || [];
   const liabilitySummary = liabilitiesPayload?.summary || {};
+  const paymentMethods = breakdown?.payment_methods || [];
+  const paymentStatuses = breakdown?.payment_statuses || [];
+  const refundStatuses = breakdown?.refund_statuses || [];
 
   const statCards = [
     { label: 'Doanh thu kỳ này', value: formatCurrency(report.revenue || 0) },
@@ -116,6 +121,91 @@ export default function Reports() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-4 border bg-white p-4 shadow-sm">
+        <div className="mb-3">
+          <h3 className="h5 mb-1">Breakdown giao dịch</h3>
+          <p className="mb-0 text-muted">Phân tích theo phương thức, trạng thái thanh toán và hoàn tiền.</p>
+        </div>
+
+        <div className="row g-3 mb-4">
+          <div className="col-lg-4">
+            <div className="rounded-4 border p-3 h-100">
+              <div className="fw-semibold mb-2">Phương thức thanh toán</div>
+              <div className="small text-muted mb-2">Tỷ trọng theo kỳ đang xem</div>
+              {paymentMethods.length === 0 ? <div className="small text-muted">Chưa có dữ liệu.</div> : (
+                <ul className="list-unstyled mb-0">
+                  {paymentMethods.map((item) => (
+                    <li key={item.method} className="d-flex justify-content-between py-1 border-bottom">
+                      <span className="text-uppercase">{item.method}</span>
+                      <span className="fw-semibold">{formatCurrency(item.amount)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+          <div className="col-lg-4">
+            <div className="rounded-4 border p-3 h-100">
+              <div className="fw-semibold mb-2">Trạng thái thanh toán</div>
+              <div className="small text-muted mb-2">Đếm theo giao dịch phát sinh</div>
+              {paymentStatuses.length === 0 ? <div className="small text-muted">Chưa có dữ liệu.</div> : (
+                <ul className="list-unstyled mb-0">
+                  {paymentStatuses.map((item) => (
+                    <li key={item.status} className="d-flex justify-content-between py-1 border-bottom">
+                      <span>{item.status}</span>
+                      <span className="fw-semibold">{item.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+          <div className="col-lg-4">
+            <div className="rounded-4 border p-3 h-100">
+              <div className="fw-semibold mb-2">Trạng thái hoàn tiền</div>
+              <div className="small text-muted mb-2">Theo yêu cầu trong kỳ</div>
+              {refundStatuses.length === 0 ? <div className="small text-muted">Chưa có dữ liệu.</div> : (
+                <ul className="list-unstyled mb-0">
+                  {refundStatuses.map((item) => (
+                    <li key={item.status} className="d-flex justify-content-between py-1 border-bottom">
+                      <span>{item.status}</span>
+                      <span className="fw-semibold">{item.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="table-responsive">
+          <table className="table table-sm align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Tháng</th>
+                <th>Doanh thu</th>
+                <th>Hoàn tiền</th>
+                <th>Yêu cầu hoàn tiền</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trend.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="py-4 text-center text-muted">Chưa có dữ liệu xu hướng.</td>
+                </tr>
+              ) : trend.map((item) => (
+                <tr key={item.label}>
+                  <td>{item.label}</td>
+                  <td>{formatCurrency(item.revenue)}</td>
+                  <td>{formatCurrency(item.refunds)}</td>
+                  <td>{item.requests}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 

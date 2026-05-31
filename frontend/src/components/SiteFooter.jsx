@@ -8,7 +8,7 @@ export default function SiteFooter() {
   const workspacePath = getWorkspacePath(role);
 
   return (
-    <footer className="tf-footer mt-auto pt-5 pb-4">
+    <footer className="tf-footer tf-site-footer mt-auto pt-5 pb-4">
       <div className="container">
         <div className="row g-4 align-items-start tf-footer-grid">
           <div className="col-lg-4 tf-footer-col">
