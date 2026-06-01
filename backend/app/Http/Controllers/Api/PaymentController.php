@@ -18,6 +18,7 @@ use App\Services\PaymentService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -644,21 +645,34 @@ class PaymentController extends Controller
         $filename = 'bao-cao-tai-chinh-'.$month.'.'.$format;
 
         if ($format === 'pdf') {
-            $pdf = Pdf::loadView('pdf.finance-report', [
-                'month' => $data['month'],
-                'summary' => $data['summary'],
-                'paymentMethods' => $data['payment_methods'],
-                'paymentStatuses' => $data['payment_statuses'],
-                'refundStatuses' => $data['refund_statuses'],
-                'monthlyTrend' => $data['monthly_trend'],
-                'liabilities' => $data['liabilities'],
-                'generatedAt' => Carbon::now(),
-            ])->setPaper('a4')->setOptions([
-                'defaultFont' => 'DejaVu Sans',
-                'isRemoteEnabled' => true,
-            ]);
+            try {
+                $pdf = Pdf::loadView('pdf.finance-report', [
+                    'month' => $data['month'],
+                    'summary' => $data['summary'],
+                    'paymentMethods' => $data['payment_methods'],
+                    'paymentStatuses' => $data['payment_statuses'],
+                    'refundStatuses' => $data['refund_statuses'],
+                    'monthlyTrend' => $data['monthly_trend'],
+                    'liabilities' => $data['liabilities'],
+                    'generatedAt' => Carbon::now(),
+                ])->setPaper('a4')->setOptions([
+                    'defaultFont' => 'DejaVu Sans',
+                    'isRemoteEnabled' => true,
+                    'isHtml5ParserEnabled' => true,
+                ]);
 
-            return $pdf->download($filename);
+                return response($pdf->output(), 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+                ]);
+            } catch (\Throwable $exception) {
+                Log::error('Failed to generate finance report PDF.', [
+                    'exception' => $exception,
+                    'month' => $month,
+                ]);
+
+                return $this->apiResponse(false, null, 'Lỗi khi tạo file PDF. Vui lòng thử lại sau.', 500);
+            }
         }
 
         $rows = [
@@ -731,6 +745,7 @@ class PaymentController extends Controller
             fclose($stream);
         }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
 
