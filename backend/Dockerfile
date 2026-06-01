@@ -21,12 +21,12 @@ RUN docker-php-ext-install pdo pdo_mysql zip intl
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+RUN pecl install mongodb && docker-php-ext-enable mongodb
+
 COPY composer.json composer.lock* ./
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts --no-dev
 
 COPY . .
-
-RUN pecl install mongodb && docker-php-ext-enable mongodb
 
 RUN php artisan config:clear \
     && php artisan cache:clear \
