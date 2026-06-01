@@ -1,6 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { getRoleLabel, getWorkspacePath, isInternalRole } from '../utils/workspace';
+import { getRoleLabel, getWorkspacePath } from '../utils/workspace';
 import { resolveAvatarUrl } from '../utils/avatar';
 
 function NavItem({ to, children }) {
@@ -15,7 +15,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { isAuthenticated, logout, role, user } = useAuth();
   const workspacePath = getWorkspacePath(role);
-  const showWorkspaceLink = isAuthenticated && isInternalRole(role);
   const isCustomerView = !isAuthenticated || role === 'customer';
   const avatar = resolveAvatarUrl(user?.avatar, user?.updated_at, user?.name || 'User');
 
@@ -61,11 +60,6 @@ export default function Navbar() {
             <li className="nav-item">
               <NavItem to="/news-promotions">Tin tức & ưu đãi</NavItem>
             </li>
-            {showWorkspaceLink && (
-              <li className="nav-item">
-                <NavItem to={workspacePath}>Khu vực làm việc</NavItem>
-              </li>
-            )}
           </ul>
 
           <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 tf-navbar-actions">
@@ -131,13 +125,6 @@ export default function Navbar() {
                           </Link>
                         </li>
                       </>
-                    )}
-                    {showWorkspaceLink && (
-                      <li>
-                        <Link className="dropdown-item rounded-3" to={workspacePath}>
-                          Về khu vực làm việc
-                        </Link>
-                      </li>
                     )}
                     <li><hr className="dropdown-divider" /></li>
                     <li>

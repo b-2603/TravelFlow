@@ -1,11 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { getWorkspacePath, isInternalRole } from '../utils/workspace';
 
 export default function SiteFooter() {
-  const { isAuthenticated, role } = useAuth();
+  const { role } = useAuth();
   const isCustomer = role === 'customer';
-  const workspacePath = getWorkspacePath(role);
 
   return (
     <footer className="tf-footer tf-site-footer mt-auto pt-5 pb-4">
@@ -32,7 +30,6 @@ export default function SiteFooter() {
               <Link className="tf-footer-link" to="/about">Giới thiệu</Link>
               <Link className="tf-footer-link" to="/news-promotions">Tin tức & ưu đãi</Link>
               {isCustomer && <Link className="tf-footer-link" to="/favorites">Yêu thích</Link>}
-              {isAuthenticated && isInternalRole(role) && <Link className="tf-footer-link" to={workspacePath}>Khu vực làm việc</Link>}
             </div>
           </div>
 
