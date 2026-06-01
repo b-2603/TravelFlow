@@ -31,6 +31,8 @@ class AdminController extends Controller
     {
         $today = Carbon::today();
         $thirtyDaysAgo = Carbon::now()->subDays(30);
+        $paidRevenue = (float) Payment::where('status', 'success')->sum('amount');
+        $bookingGrossValue = (float) Booking::whereIn('status', ['pending', 'confirmed', 'completed'])->sum('total_price');
 
         $monthlyRevenue = collect(range(5, 0))->map(function ($monthOffset) {
             $start = now()->copy()->startOfMonth()->subMonths($monthOffset);
@@ -45,7 +47,9 @@ class AdminController extends Controller
         })->values();
 
         return $this->apiResponse(true, [
-            'total_revenue' => (float) Payment::where('status', 'success')->sum('amount'),
+            'total_revenue' => $paidRevenue,
+            'paid_revenue' => $paidRevenue,
+            'booking_gross_value' => $bookingGrossValue,
             'bookings_today' => Booking::where('created_at', '>=', $today)->count(),
             'tours_active' => Tour::where('status', 'approved')->whereNull('deleted_at')->count(),
             'users_new_30_days' => User::where('created_at', '>=', $thirtyDaysAgo)->count(),

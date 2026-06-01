@@ -33,4 +33,4 @@ RUN php artisan config:clear \
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "php artisan config:clear && php artisan cache:clear && php artisan config:cache && php artisan serve --host=0.0.0.0 --port=10000"]
+CMD ["sh", "-c", "php artisan config:clear && php artisan cache:clear && php artisan config:cache && php artisan db:seed --class=InitialDataSeeder --force && php artisan serve --host=0.0.0.0 --port=10000"]

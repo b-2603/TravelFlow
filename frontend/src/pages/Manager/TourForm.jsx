@@ -15,6 +15,69 @@ const tabLabels = {
   images: 'Hình ảnh',
 };
 
+const presetGroups = {
+  included_services: {
+    title: 'Chọn dịch vụ bao gồm',
+    options: [
+      'Xe du lịch đời mới phục vụ theo chương trình',
+      'Khách sạn tiêu chuẩn theo lịch trình',
+      'Các bữa ăn theo chương trình',
+      'Vé tham quan theo lịch trình',
+      'Hướng dẫn viên tiếng Việt chuyên nghiệp',
+      'Nước suối trên xe',
+      'Bảo hiểm du lịch',
+      'Quà tặng du lịch',
+      'Vé cáp treo hoặc tàu theo chương trình',
+      'Hỗ trợ check-in và thủ tục đoàn',
+    ],
+  },
+  excluded_services: {
+    title: 'Chọn dịch vụ không bao gồm',
+    options: [
+      'Vé máy bay khứ hồi',
+      'Chi phí cá nhân ngoài chương trình',
+      'Đồ uống trong các bữa ăn',
+      'Phụ thu phòng đơn',
+      'VAT',
+      'Tiền tip cho hướng dẫn viên và tài xế',
+      'Chi phí giặt ủi, điện thoại, minibar',
+      'Dịch vụ phát sinh ngoài lịch trình',
+      'Chi phí visa hoặc hộ chiếu nếu có',
+      'Phụ thu ngày lễ, Tết nếu có',
+    ],
+  },
+  suitable_for: {
+    title: 'Chọn đối tượng phù hợp',
+    options: [
+      'Gia đình',
+      'Nhóm bạn',
+      'Cặp đôi',
+      'Khách công ty',
+      'Người lớn tuổi',
+      'Trẻ em',
+      'Khách thích nghỉ dưỡng',
+      'Khách thích khám phá',
+      'Khách yêu văn hóa - lịch sử',
+      'Khách thích biển đảo',
+    ],
+  },
+  travel_tips: {
+    title: 'Chọn lưu ý khi đi tour',
+    options: [
+      'Mang theo CCCD hoặc hộ chiếu bản gốc',
+      'Có mặt tại điểm tập trung trước giờ khởi hành 30 phút',
+      'Mang giày thể thao hoặc dép dễ di chuyển',
+      'Chuẩn bị kem chống nắng, nón và kính râm',
+      'Mang áo khoác nhẹ cho buổi tối',
+      'Không tự ý tách đoàn khi chưa báo hướng dẫn viên',
+      'Giữ gìn tư trang cá nhân tại nơi đông người',
+      'Thông báo trước nếu có yêu cầu ăn chay hoặc dị ứng thực phẩm',
+      'Chuẩn bị thuốc cá nhân nếu cần',
+      'Tuân thủ quy định tại điểm tham quan',
+    ],
+  },
+};
+
 function appendFormData(formData, key, value) {
   if (Array.isArray(value)) {
     value.forEach((item, index) => appendFormData(formData, `${key}[${index}]`, item));
@@ -62,6 +125,8 @@ export default function TourForm() {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('basic');
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [presetModal, setPresetModal] = useState(null);
+  const [presetSelection, setPresetSelection] = useState([]);
 
   const { data: editSeed } = useQuery({
     queryKey: ['manager-tour-edit', id],
@@ -97,6 +162,32 @@ export default function TourForm() {
     },
     onError: (error) => toast.error(formatApiError(error)),
   });
+
+  const openPresetModal = (field, values) => {
+    const options = presetGroups[field]?.options || [];
+    const currentValues = (values[field] || []).filter(Boolean);
+    setPresetSelection(currentValues.filter((item) => options.includes(item)));
+    setPresetModal(field);
+  };
+
+  const togglePresetSelection = (value) => {
+    setPresetSelection((current) => (
+      current.includes(value) ? current.filter((item) => item !== value) : [...current, value]
+    ));
+  };
+
+  const applyPresetSelection = (values, setFieldValue) => {
+    const group = presetGroups[presetModal];
+    if (! group) return;
+
+    const currentValues = (values[presetModal] || []).filter(Boolean);
+    const customValues = currentValues.filter((item) => ! group.options.includes(item));
+    const nextValues = [...customValues, ...presetSelection];
+
+    setFieldValue(presetModal, nextValues.length > 0 ? nextValues : ['']);
+    setPresetModal(null);
+    setPresetSelection([]);
+  };
 
   return (
     <div className="rounded-4 border bg-white p-4 shadow-sm">
@@ -140,7 +231,7 @@ export default function TourForm() {
         enableReinitialize
         onSubmit={(values) => mutation.mutate(values)}
       >
-        {({ values }) => (
+        {({ values, setFieldValue }) => (
           <Form>
             <ul className="nav nav-tabs mb-4">
               {tabs.map((tab) => (
@@ -309,7 +400,12 @@ export default function TourForm() {
                 </div>
                 <div className="col-lg-6">
                   <div className="rounded-3 border p-3 h-100">
-                    <h3 className="h6 mb-3">Dịch vụ bao gồm</h3>
+                    <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
+                      <h3 className="h6 mb-0">Dịch vụ bao gồm</h3>
+                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openPresetModal('included_services', values)}>
+                        Chọn mẫu
+                      </button>
+                    </div>
                     <FieldArray name="included_services">
                       {({ push, remove }) => (
                         <div className="d-grid gap-2">
@@ -331,7 +427,12 @@ export default function TourForm() {
                 </div>
                 <div className="col-lg-6">
                   <div className="rounded-3 border p-3 h-100">
-                    <h3 className="h6 mb-3">Dịch vụ không bao gồm</h3>
+                    <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
+                      <h3 className="h6 mb-0">Dịch vụ không bao gồm</h3>
+                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openPresetModal('excluded_services', values)}>
+                        Chọn mẫu
+                      </button>
+                    </div>
                     <FieldArray name="excluded_services">
                       {({ push, remove }) => (
                         <div className="d-grid gap-2">
@@ -353,7 +454,12 @@ export default function TourForm() {
                 </div>
                 <div className="col-lg-6">
                   <div className="rounded-3 border p-3 h-100">
-                    <h3 className="h6 mb-3">Phù hợp với</h3>
+                    <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
+                      <h3 className="h6 mb-0">Phù hợp với</h3>
+                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openPresetModal('suitable_for', values)}>
+                        Chọn mẫu
+                      </button>
+                    </div>
                     <FieldArray name="suitable_for">
                       {({ push, remove }) => (
                         <div className="d-grid gap-2">
@@ -382,7 +488,12 @@ export default function TourForm() {
                 </div>
                 <div className="col-12">
                   <div className="rounded-3 border p-3">
-                    <h3 className="h6 mb-3">Lưu ý khi đi tour</h3>
+                    <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
+                      <h3 className="h6 mb-0">Lưu ý khi đi tour</h3>
+                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openPresetModal('travel_tips', values)}>
+                        Chọn mẫu
+                      </button>
+                    </div>
                     <FieldArray name="travel_tips">
                       {({ push, remove }) => (
                         <div className="d-grid gap-2">
@@ -553,6 +664,47 @@ export default function TourForm() {
                   )}
                 </FieldArray>
               </div>
+            )}
+
+            {presetModal && (
+              <>
+                <div className="modal fade show d-block" tabIndex="-1" role="dialog" aria-modal="true">
+                  <div className="modal-dialog modal-dialog-scrollable modal-lg">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                        <h5 className="modal-title">{presetGroups[presetModal].title}</h5>
+                        <button type="button" className="btn-close" aria-label="Đóng" onClick={() => setPresetModal(null)} />
+                      </div>
+                      <div className="modal-body">
+                        <div className="row g-2">
+                          {presetGroups[presetModal].options.map((option) => (
+                            <div className="col-md-6" key={option}>
+                              <label className="d-flex align-items-start gap-2 rounded-3 border p-3 h-100">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input mt-1"
+                                  checked={presetSelection.includes(option)}
+                                  onChange={() => togglePresetSelection(option)}
+                                />
+                                <span>{option}</span>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="modal-footer">
+                        <button type="button" className="btn btn-light" onClick={() => setPresetModal(null)}>
+                          Hủy
+                        </button>
+                        <button type="button" className="btn btn-primary" onClick={() => applyPresetSelection(values, setFieldValue)}>
+                          Áp dụng {presetSelection.length > 0 ? `(${presetSelection.length})` : ''}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-backdrop fade show" />
+              </>
             )}
 
             <div className="mt-4 d-flex justify-content-end gap-2">

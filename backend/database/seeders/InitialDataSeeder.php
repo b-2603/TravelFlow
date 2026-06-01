@@ -1116,7 +1116,121 @@ class InitialDataSeeder extends Seeder
             }
         }
 
-        $this->command->info('Đã khởi tạo dữ liệu nền đầy đủ hơn. Không tạo dữ liệu giao dịch giả.');
+        foreach ($customers as $index => $customer) {
+            if ($tours->isEmpty()) {
+                break;
+            }
+
+            $tour = $tours[$index % $tours->count()];
+            $departure = collect($tour->departures ?? [])->first();
+
+            if (! $departure || empty($departure['date'])) {
+                continue;
+            }
+
+            $existingBooking = Booking::where('tour_id', $tour->_id)
+                ->where('user_id', $customer->_id)
+                ->where('note', 'Dữ liệu mẫu đặt tour')
+                ->first();
+
+            $numPax = $index + 1;
+            $booking = $existingBooking ?? Booking::create([
+                'tour_id' => $tour->_id,
+                'user_id' => $customer->_id,
+                'assigned_agent_id' => $agent?->_id,
+                'departure_date' => Carbon::parse($departure['date']),
+                'num_pax' => $numPax,
+                'total_price' => $numPax * (float) $tour->price_per_person,
+                'status' => $index % 2 === 0 ? 'confirmed' : 'completed',
+                'passengers' => [
+                    [
+                        'name' => $customer->name,
+                        'dob' => '1995-01-01',
+                        'passport' => 'P'.str_pad((string) ($index + 1), 8, '0', STR_PAD_LEFT),
+                    ],
+                ],
+                'note' => 'Dữ liệu mẫu đặt tour',
+                'internal_note' => $index % 2 === 0 ? 'Khách ưu tiên chỗ ngồi gần cửa sổ.' : 'Khách quan tâm lịch trình nhẹ nhàng cho gia đình.',
+                'special_requirements' => $index % 2 === 0 ? ['Ăn chay', 'Xe đón sân bay'] : ['Phòng đôi', 'Hỗ trợ xe đẩy trẻ em'],
+                'payment_status' => $index % 2 === 0 ? 'partial' : 'paid',
+            ]);
+
+            if (! $existingBooking) {
+                $booking->created_at = Carbon::now()->subDays($index + 1);
+                $booking->updated_at = Carbon::now()->subDays($index + 1);
+                $booking->save();
+            }
+
+            Payment::firstOrCreate(
+                ['transaction_id' => 'SEED-BOOKING-'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)],
+                [
+                    'booking_id' => $booking->_id,
+                    'user_id' => $customer->_id,
+                    'amount' => $booking->payment_status === 'paid' ? $booking->total_price : $booking->total_price / 2,
+                    'method' => 'bank',
+                    'payment_scope' => $booking->payment_status === 'paid' ? 'full' : 'deposit',
+                    'status' => 'success',
+                    'paid_at' => Carbon::now()->subDays($index + 1),
+                ]
+            );
+
+            $existingSeedLog = ActivityLog::where('user_id', $customer->_id)
+                ->where('action', 'seeded_booking_created')
+                ->where('module', 'bookings')
+                ->where('detail.booking_id', (string) $booking->_id)
+                ->first();
+
+            if (! $existingSeedLog) {
+                ActivityLog::create([
+                    'user_id' => $customer->_id,
+                    'action' => 'seeded_booking_created',
+                    'module' => 'bookings',
+                    'detail' => [
+                        'booking_id' => (string) $booking->_id,
+                        'tour_id' => (string) $tour->_id,
+                    ],
+                    'ip_address' => '127.0.0.1',
+                    'created_at' => Carbon::now()->subDays($index + 1),
+                ]);
+            }
+
+            FavoriteTour::firstOrCreate([
+                'user_id' => $customer->_id,
+                'tour_id' => $tour->_id,
+            ]);
+
+            if ($index === 0) {
+                SupportTicket::firstOrCreate(
+                    [
+                        'user_id' => $customer->_id,
+                        'booking_id' => $booking->_id,
+                        'subject' => 'Cần hỗ trợ thông tin tập trung',
+                    ],
+                    [
+                        'message' => 'Nhờ xác nhận lại giờ tập trung và vật dụng cần chuẩn bị trước chuyến đi.',
+                        'status' => 'answered',
+                        'reply' => 'Vui lòng có mặt trước giờ khởi hành 30 phút và mang theo CCCD hoặc hộ chiếu bản gốc.',
+                    ]
+                );
+            }
+
+            if ($index === 1) {
+                RefundRequest::firstOrCreate(
+                    [
+                        'user_id' => $customer->_id,
+                        'booking_id' => $booking->_id,
+                    ],
+                    [
+                        'reason' => 'Tôi cần dời kế hoạch cá nhân nên muốn được hỗ trợ hoàn tiền cho booking này.',
+                        'amount_requested' => $booking->total_price,
+                        'status' => 'pending',
+                        'admin_note' => null,
+                    ]
+                );
+            }
+        }
+
+        $this->command->info('Đã khởi tạo dữ liệu nền và giao dịch mẫu.');
         return;
 
         foreach ($customers as $index => $customer) {

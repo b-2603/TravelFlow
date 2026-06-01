@@ -98,7 +98,8 @@ export default function Dashboard() {
     <div className="d-grid gap-4">
       <div className="row g-3">
         {[
-          { label: 'Tổng doanh thu', value: formatCurrency(stats?.total_revenue), tone: 'primary' },
+          { label: 'Doanh thu đã thu', value: formatCurrency(stats?.paid_revenue ?? stats?.total_revenue), tone: 'primary' },
+          { label: 'Giá trị booking', value: formatCurrency(stats?.booking_gross_value), tone: 'info' },
           { label: 'Booking hôm nay', value: stats?.bookings_today ?? 0, tone: 'warning' },
           { label: 'Tour đang hoạt động', value: stats?.tours_active ?? 0, tone: 'success' },
           { label: 'Người dùng mới / 30 ngày', value: stats?.users_new_30_days ?? 0, tone: 'info' },
