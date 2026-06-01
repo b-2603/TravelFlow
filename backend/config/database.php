@@ -5,9 +5,9 @@ return [
     'connections' => [
         'mongodb' => [
             'driver' => 'mongodb',
-            'dsn' => env('MONGODB_URI'),
-            'host' => env('MONGODB_HOST'),
-            'port' => env('MONGODB_PORT'),
+            'dsn' => env('MONGODB_URI', env('MONGODB_DSN')),
+            'host' => env('MONGODB_HOST', env('DB_HOST')),
+            'port' => env('MONGODB_PORT', env('DB_PORT')),
             'database' => env('MONGODB_DATABASE', 'travel_management'),
             'username' => env('MONGODB_USERNAME'),
             'password' => env('MONGODB_PASSWORD'),
