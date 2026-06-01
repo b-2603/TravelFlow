@@ -8,9 +8,12 @@ return [
         'http://127.0.0.1:5173',
         'http://localhost:5174',
         'http://127.0.0.1:5174',
+        'https://travel-management-frontend-7az8.onrender.com',
         env('FRONTEND_URL'),
     ])),
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https://travel-management-frontend-[a-z0-9-]+\.onrender\.com$#',
+    ],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
