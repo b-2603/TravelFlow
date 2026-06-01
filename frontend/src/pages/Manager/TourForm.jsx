@@ -120,6 +120,40 @@ function formatApiError(error) {
   return message || 'Không thể lưu tour';
 }
 
+function PresetPickerPanel({ title, field, values, onOpen, setFieldValue }) {
+  const selectedItems = (values[field] || []).filter(Boolean);
+
+  return (
+    <div className="rounded-3 border p-3 h-100">
+      <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
+        <h3 className="h6 mb-0">{title}</h3>
+        <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => onOpen(field, values)}>
+          Chọn mục
+        </button>
+      </div>
+
+      {selectedItems.length === 0 ? (
+        <div className="rounded-3 border bg-light-subtle p-3 text-muted">Chưa chọn mục nào.</div>
+      ) : (
+        <div className="d-flex flex-wrap gap-2">
+          {selectedItems.map((item) => (
+            <span key={item} className="badge rounded-pill text-bg-light border d-inline-flex align-items-center gap-2 px-3 py-2">
+              <span>{item}</span>
+              <button
+                type="button"
+                className="btn-close"
+                aria-label={`Bỏ ${item}`}
+                style={{ fontSize: 10 }}
+                onClick={() => setFieldValue(field, selectedItems.filter((value) => value !== item))}
+              />
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TourForm() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -184,7 +218,7 @@ export default function TourForm() {
     const customValues = currentValues.filter((item) => ! group.options.includes(item));
     const nextValues = [...customValues, ...presetSelection];
 
-    setFieldValue(presetModal, nextValues.length > 0 ? nextValues : ['']);
+    setFieldValue(presetModal, nextValues);
     setPresetModal(null);
     setPresetSelection([]);
   };
@@ -216,10 +250,10 @@ export default function TourForm() {
           local_culture: editSeed?.local_culture?.length ? editSeed.local_culture : [''],
           best_time_to_visit: editSeed?.best_time_to_visit || '',
           weather_notes: editSeed?.weather_notes || '',
-          included_services: editSeed?.included_services?.length ? editSeed.included_services : [''],
-          excluded_services: editSeed?.excluded_services?.length ? editSeed.excluded_services : [''],
-          suitable_for: editSeed?.suitable_for?.length ? editSeed.suitable_for : [''],
-          travel_tips: editSeed?.travel_tips?.length ? editSeed.travel_tips : [''],
+          included_services: editSeed?.included_services?.length ? editSeed.included_services : [],
+          excluded_services: editSeed?.excluded_services?.length ? editSeed.excluded_services : [],
+          suitable_for: editSeed?.suitable_for?.length ? editSeed.suitable_for : [],
+          travel_tips: editSeed?.travel_tips?.length ? editSeed.travel_tips : [],
           meeting_point: editSeed?.meeting_point || '',
           linked_partner_ids: editSeed?.linked_partner_ids?.length ? editSeed.linked_partner_ids : [],
           itinerary: editSeed?.itinerary?.length ? editSeed.itinerary : [{ day: 1, title: '', description: '' }],
@@ -399,85 +433,31 @@ export default function TourForm() {
                   </div>
                 </div>
                 <div className="col-lg-6">
-                  <div className="rounded-3 border p-3 h-100">
-                    <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
-                      <h3 className="h6 mb-0">Dịch vụ bao gồm</h3>
-                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openPresetModal('included_services', values)}>
-                        Chọn mẫu
-                      </button>
-                    </div>
-                    <FieldArray name="included_services">
-                      {({ push, remove }) => (
-                        <div className="d-grid gap-2">
-                          {values.included_services.map((_, index) => (
-                            <div className="d-flex gap-2" key={index}>
-                              <Field name={`included_services.${index}`} className="form-control" />
-                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
-                                Xóa
-                              </button>
-                            </div>
-                          ))}
-                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
-                            Thêm mục
-                          </button>
-                        </div>
-                      )}
-                    </FieldArray>
-                  </div>
+                  <PresetPickerPanel
+                    title="Dịch vụ bao gồm"
+                    field="included_services"
+                    values={values}
+                    onOpen={openPresetModal}
+                    setFieldValue={setFieldValue}
+                  />
                 </div>
                 <div className="col-lg-6">
-                  <div className="rounded-3 border p-3 h-100">
-                    <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
-                      <h3 className="h6 mb-0">Dịch vụ không bao gồm</h3>
-                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openPresetModal('excluded_services', values)}>
-                        Chọn mẫu
-                      </button>
-                    </div>
-                    <FieldArray name="excluded_services">
-                      {({ push, remove }) => (
-                        <div className="d-grid gap-2">
-                          {values.excluded_services.map((_, index) => (
-                            <div className="d-flex gap-2" key={index}>
-                              <Field name={`excluded_services.${index}`} className="form-control" />
-                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
-                                Xóa
-                              </button>
-                            </div>
-                          ))}
-                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
-                            Thêm mục
-                          </button>
-                        </div>
-                      )}
-                    </FieldArray>
-                  </div>
+                  <PresetPickerPanel
+                    title="Dịch vụ không bao gồm"
+                    field="excluded_services"
+                    values={values}
+                    onOpen={openPresetModal}
+                    setFieldValue={setFieldValue}
+                  />
                 </div>
                 <div className="col-lg-6">
-                  <div className="rounded-3 border p-3 h-100">
-                    <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
-                      <h3 className="h6 mb-0">Phù hợp với</h3>
-                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openPresetModal('suitable_for', values)}>
-                        Chọn mẫu
-                      </button>
-                    </div>
-                    <FieldArray name="suitable_for">
-                      {({ push, remove }) => (
-                        <div className="d-grid gap-2">
-                          {values.suitable_for.map((_, index) => (
-                            <div className="d-flex gap-2" key={index}>
-                              <Field name={`suitable_for.${index}`} className="form-control" />
-                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
-                                Xóa
-                              </button>
-                            </div>
-                          ))}
-                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
-                            Thêm đối tượng
-                          </button>
-                        </div>
-                      )}
-                    </FieldArray>
-                  </div>
+                  <PresetPickerPanel
+                    title="Phù hợp với"
+                    field="suitable_for"
+                    values={values}
+                    onOpen={openPresetModal}
+                    setFieldValue={setFieldValue}
+                  />
                 </div>
                 <div className="col-lg-6">
                   <div className="rounded-3 border p-3 h-100">
@@ -487,31 +467,13 @@ export default function TourForm() {
                   </div>
                 </div>
                 <div className="col-12">
-                  <div className="rounded-3 border p-3">
-                    <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
-                      <h3 className="h6 mb-0">Lưu ý khi đi tour</h3>
-                      <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => openPresetModal('travel_tips', values)}>
-                        Chọn mẫu
-                      </button>
-                    </div>
-                    <FieldArray name="travel_tips">
-                      {({ push, remove }) => (
-                        <div className="d-grid gap-2">
-                          {values.travel_tips.map((_, index) => (
-                            <div className="d-flex gap-2" key={index}>
-                              <Field name={`travel_tips.${index}`} className="form-control" />
-                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
-                                Xóa
-                              </button>
-                            </div>
-                          ))}
-                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
-                            Thêm lưu ý
-                          </button>
-                        </div>
-                      )}
-                    </FieldArray>
-                  </div>
+                  <PresetPickerPanel
+                    title="Lưu ý khi đi tour"
+                    field="travel_tips"
+                    values={values}
+                    onOpen={openPresetModal}
+                    setFieldValue={setFieldValue}
+                  />
                 </div>
               </div>
             )}
