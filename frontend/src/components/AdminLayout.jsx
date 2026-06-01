@@ -12,6 +12,7 @@ function titleFromPath(pathname) {
     users: 'Người dùng',
     tours: 'Tour',
     reviews: 'Đánh giá',
+    'news-promotions': 'Tin tức & ưu đãi',
     bookings: 'Đơn đặt',
     logs: 'Nhật ký',
     create: 'Tạo tour',

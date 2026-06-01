@@ -171,6 +171,26 @@ export const accountantAPI = {
   logs: (params) => api.get('/accountant/logs', { params }),
 };
 
+export const newsPromotionAPI = {
+  list: (params) => api.get('/news-promotions', { params }),
+  detail: (id) => api.get(`/news-promotions/${id}`),
+  managerList: (params) => api.get('/manager/news-promotions', { params }),
+  create: (payload) => {
+    if (payload instanceof FormData) {
+      return api.post('/manager/news-promotions', payload);
+    }
+    return api.post('/manager/news-promotions', payload);
+  },
+  update: (id, payload) => {
+    if (payload instanceof FormData) {
+      payload.append('_method', 'PUT');
+      return api.post(`/manager/news-promotions/${id}`, payload);
+    }
+    return api.put(`/manager/news-promotions/${id}`, payload);
+  },
+  remove: (id) => api.delete(`/manager/news-promotions/${id}`),
+};
+
 export const guideAPI = {
   dashboard: () => api.get('/guide/dashboard'),
   assignments: () => api.get('/guide/assignments'),

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\GuideController;
 use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\NewsPromotionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\TourController;
 use App\Http\Controllers\Api\UserController;
@@ -52,6 +53,8 @@ Route::prefix('auth')->group(function () {
 Route::get('/tours', [TourController::class, 'index']);
 Route::get('/tours/{slug}', [TourController::class, 'show']);
 Route::get('/tours/{id}/reviews', [ReviewController::class, 'index']);
+Route::get('/news-promotions', [NewsPromotionController::class, 'index']);
+Route::get('/news-promotions/{id}', [NewsPromotionController::class, 'show']);
 
 Route::middleware('jwt')->group(function () {
     Route::prefix('auth')->group(function () {
@@ -91,6 +94,10 @@ Route::middleware('jwt')->group(function () {
     Route::middleware('role:tour_manager|admin')->group(function () {
         Route::get('/manager/tours', [TourController::class, 'managerIndex']);
         Route::get('/manager/meta', [TourController::class, 'managerMeta']);
+        Route::get('/manager/news-promotions', [NewsPromotionController::class, 'index']);
+        Route::post('/manager/news-promotions', [NewsPromotionController::class, 'store']);
+        Route::put('/manager/news-promotions/{id}', [NewsPromotionController::class, 'update']);
+        Route::delete('/manager/news-promotions/{id}', [NewsPromotionController::class, 'destroy']);
         Route::get('/manager/tours/{id}', [TourController::class, 'managerShow']);
         Route::post('/manager/tours/{id}/submit', [TourController::class, 'submitForApproval']);
         Route::post('/manager/tours/{id}/toggle-pin', [TourController::class, 'togglePinned']);

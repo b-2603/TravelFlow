@@ -8,6 +8,7 @@ const menuItems = [
   { label: 'Duyệt review', to: '/admin/reviews', roles: ['admin'] },
   { label: 'Điều phối HDV', to: '/admin/guide-assignments', roles: ['admin'] },
   { label: 'Đơn đặt', to: '/admin/bookings', roles: ['admin'] },
+  { label: 'Tin tức & ưu đãi', to: '/manager/news-promotions', roles: ['tour_manager', 'admin'] },
   { label: 'Nhật ký', to: '/admin/logs', roles: ['admin'] },
   { label: 'Quản lý tour', to: '/manager/tours', roles: ['tour_manager', 'admin'] },
   { label: 'Thêm tour', to: '/manager/tours/create', roles: ['tour_manager', 'admin'] },

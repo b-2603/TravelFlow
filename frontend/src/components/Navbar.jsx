@@ -54,6 +54,12 @@ export default function Navbar() {
             <li className="nav-item">
               <NavItem to="/tours">Khám phá tour</NavItem>
             </li>
+            <li className="nav-item">
+              <NavItem to="/about">Giới thiệu</NavItem>
+            </li>
+            <li className="nav-item">
+              <NavItem to="/news-promotions">Tin tức & ưu đãi</NavItem>
+            </li>
             {showWorkspaceLink && (
               <li className="nav-item">
                 <NavItem to={workspacePath}>Khu vực làm việc</NavItem>

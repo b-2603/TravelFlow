@@ -9,6 +9,7 @@ use App\Models\Guide;
 use App\Models\Partner;
 use App\Models\PartnerService;
 use App\Models\Payment;
+use App\Models\NewsPromotion;
 use App\Models\RefundRequest;
 use App\Models\Review;
 use App\Models\SupportTicket;
@@ -1253,6 +1254,65 @@ class InitialDataSeeder extends Seeder
                     'created_at' => Carbon::now()->subDays(rand(10, 60)),
                 ]);
             }
+        }
+
+        $newsItems = [
+            [
+                'type' => 'news',
+                'title' => 'TravelFlow ra mắt trang Tin tức & Ưu đãi',
+                'summary' => 'Khu vực mới giúp khách hàng xem nhanh bài viết và chương trình khuyến mãi theo thời gian thực.',
+                'content' => 'TravelFlow vừa bổ sung khu vực Tin tức & Ưu đãi để hiển thị các thông tin cập nhật mới nhất về tour, chương trình sale theo mùa, ưu đãi đặc biệt và các thông báo vận hành quan trọng.',
+                'tag' => 'Cập nhật hệ thống',
+                'cover_image' => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
+                'published_at' => Carbon::now()->subDays(1)->toDateString(),
+                'status' => 'published',
+            ],
+            [
+                'type' => 'promotion',
+                'title' => 'Sale hè - Giảm 15% cho tour biển chọn lọc',
+                'summary' => 'Ưu đãi áp dụng cho các tour biển nổi bật trong tháng, số lượng chỗ có hạn.',
+                'content' => 'Chương trình ưu đãi mùa hè áp dụng cho một số tour biển như Đà Nẵng, Quy Nhơn và Phú Quốc. Khách đặt sớm sẽ được giảm 15% trực tiếp trên giá tour và ưu tiên chọn chỗ đẹp.',
+                'tag' => 'Ưu đãi hot',
+                'cover_image' => 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80',
+                'published_at' => Carbon::now()->subDays(2)->toDateString(),
+                'status' => 'published',
+            ],
+            [
+                'type' => 'news',
+                'title' => 'Tối ưu quy trình phân công hướng dẫn viên',
+                'summary' => 'Bộ phận vận hành có thể theo dõi phân công theo ngày khởi hành rõ ràng hơn.',
+                'content' => 'Quy trình phân công hướng dẫn viên đã được tối ưu để dễ kiểm tra lịch làm việc, hạn chế trùng lịch và hỗ trợ điều phối tour theo từng ngày khởi hành chính xác hơn.',
+                'tag' => 'Vận hành',
+                'cover_image' => 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=80',
+                'published_at' => Carbon::now()->subDays(4)->toDateString(),
+                'status' => 'published',
+            ],
+            [
+                'type' => 'promotion',
+                'title' => 'Combo gia đình - Tặng thêm 1 bữa tối',
+                'summary' => 'Ưu đãi dành cho nhóm gia đình đặt từ 4 người trở lên trên một số tour nghỉ dưỡng.',
+                'content' => 'Khách hàng đặt tour theo nhóm gia đình sẽ được tặng thêm một bữa tối trong lịch trình khi đáp ứng điều kiện của chương trình. Đây là ưu đãi phù hợp cho chuyến đi muốn tối ưu chi phí nhưng vẫn giữ trải nghiệm thoải mái.',
+                'tag' => 'Combo gia đình',
+                'cover_image' => 'https://images.unsplash.com/photo-1515693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80',
+                'published_at' => Carbon::now()->subDays(6)->toDateString(),
+                'status' => 'published',
+            ],
+        ];
+
+        foreach ($newsItems as $item) {
+            NewsPromotion::firstOrCreate(
+                [
+                    'type' => $item['type'],
+                    'title' => $item['title'],
+                ],
+                [
+                    ...$item,
+                    'created_by' => $creator->_id,
+                    'updated_by' => $creator->_id,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]
+            );
         }
     }
 }

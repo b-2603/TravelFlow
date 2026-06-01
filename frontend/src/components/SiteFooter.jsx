@@ -29,6 +29,8 @@ export default function SiteFooter() {
             <div className="d-grid gap-2 small">
               <Link className="tf-footer-link" to="/">Trang chủ</Link>
               <Link className="tf-footer-link" to="/tours">Danh sách tour</Link>
+              <Link className="tf-footer-link" to="/about">Giới thiệu</Link>
+              <Link className="tf-footer-link" to="/news-promotions">Tin tức & ưu đãi</Link>
               {isCustomer && <Link className="tf-footer-link" to="/favorites">Yêu thích</Link>}
               {isAuthenticated && isInternalRole(role) && <Link className="tf-footer-link" to={workspacePath}>Khu vực làm việc</Link>}
             </div>

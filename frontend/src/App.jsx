@@ -53,6 +53,10 @@ const Register = lazy(() => import('./pages/Register'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const TourDetail = lazy(() => import('./pages/TourDetail'));
 const TourList = lazy(() => import('./pages/TourList'));
+const About = lazy(() => import('./pages/About'));
+const NewsPromotions = lazy(() => import('./pages/NewsPromotions'));
+const NewsPromotionDetail = lazy(() => import('./pages/NewsPromotionDetail'));
+const NewsPromotionsManager = lazy(() => import('./pages/Admin/NewsPromotionsManager'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 
 function RouteFallback() {
@@ -71,6 +75,9 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="/tours" element={<TourList />} />
           <Route path="/tours/:slug" element={<TourDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/news-promotions" element={<NewsPromotions />} />
+          <Route path="/news-promotions/:id" element={<NewsPromotionDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -109,6 +116,7 @@ export default function App() {
               <Route path="/manager/tours/:id" element={<TourDetailManager />} />
               <Route path="/manager/tours/create" element={<TourForm />} />
               <Route path="/manager/tours/:id/edit" element={<TourForm />} />
+              <Route path="/manager/news-promotions" element={<NewsPromotionsManager />} />
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['agent']} />}>
