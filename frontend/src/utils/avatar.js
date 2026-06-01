@@ -6,7 +6,9 @@ export function resolveAvatarUrl(avatar, updatedAt, fallbackName = 'User') {
     return base;
   }
 
-  const hasQuery = base.includes('?');
+  const apiOrigin = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/api\/?$/, '');
+  const normalized = base.replace(/^http:\/\/localhost(?!:\d)/, apiOrigin).replace(/^\/storage\//, `${apiOrigin}/storage/`);
+  const hasQuery = normalized.includes('?');
   const version = updatedAt ? `v=${encodeURIComponent(updatedAt)}` : `v=${Date.now()}`;
-  return `${base}${hasQuery ? '&' : '?'}${version}`;
+  return `${normalized}${hasQuery ? '&' : '?'}${version}`;
 }
