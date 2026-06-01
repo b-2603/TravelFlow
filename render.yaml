@@ -32,10 +32,32 @@ services:
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: VITE_APP_NAME
         value: Travel Management
       - key: VITE_API_URL
         sync: false
+      - key: VITE_STORAGE_KEY
+        value: travel_management_auth
+
+  - type: web
+    name: travel-management-frontend-7az8
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_APP_NAME
+        value: Travel Management
+      - key: VITE_API_URL
+        value: https://travel-management-backend-7az8.onrender.com/api
       - key: VITE_STORAGE_KEY
         value: travel_management_auth
