@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: travel-management-backend
+    runtime: docker
+    rootDir: backend
+    plan: starter
+    envVars:
+      - key: APP_NAME
+        value: Travel Management
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: PAYMENT_SELF_CONFIRM_ENABLED
+        value: "false"
+      - key: BANK_TRANSFER_WEBHOOK_SECRET
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+
+  - type: static
+    name: travel-management-frontend
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_APP_NAME
+        value: Travel Management
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_STORAGE_KEY
+        value: travel_management_auth

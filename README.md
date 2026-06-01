@@ -48,6 +48,86 @@ Giá trị chính:
 - API URL frontend: `http://localhost:8000/api`
 - MongoDB: `mongodb://127.0.0.1:27017`
 
+## Deploy lên Render
+
+Repo này nên deploy theo 2 service:
+
+- `backend/` là một `Web Service` chạy Laravel API
+- `frontend/` là một `Static Site` chạy React/Vite
+
+### 1) Tạo backend Web Service
+
+Trong Render, tạo service mới từ repo Git:
+
+- `Root Directory`: `backend`
+- `Environment`: `Docker`
+- `Plan`: `Starter` hoặc cao hơn
+
+Render sẽ dùng `backend/Dockerfile` để build và chạy app.
+
+Biến môi trường cần có trên Render:
+
+- `APP_NAME=Travel Management`
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `APP_URL=https://<ten-backend-cua-ban>.onrender.com`
+- `FRONTEND_URL=https://<ten-frontend-cua-ban>.onrender.com`
+- `PAYMENT_SELF_CONFIRM_ENABLED=false`
+- `BANK_TRANSFER_WEBHOOK_SECRET=<secret-neu-co>`
+- `MONGODB_URI=<MongoDB connection string>`
+
+Nếu bạn dùng MongoDB Atlas, hãy điền `MONGODB_URI` theo dạng kết nối đầy đủ của Atlas.
+
+Sau khi tạo xong, mở Shell của backend trên Render và chạy:
+
+```bash
+php artisan key:generate --force
+php artisan config:cache
+php artisan route:cache
+```
+
+Nếu bạn có seed dữ liệu mẫu, chạy thêm:
+
+```bash
+php artisan db:seed
+```
+
+### 2) Tạo frontend Static Site
+
+Trong Render, tạo `Static Site` với:
+
+- `Root Directory`: `frontend`
+- `Build Command`: `npm ci && npm run build`
+- `Publish Directory`: `dist`
+
+Biến môi trường cần có:
+
+- `VITE_APP_NAME=Travel Management`
+- `VITE_API_URL=https://<ten-backend-cua-ban>.onrender.com/api`
+- `VITE_STORAGE_KEY=travel_management_auth`
+
+### 3) Chỉnh CORS và URL
+
+Backend đã được cấu hình để nhận `FRONTEND_URL` trong CORS.
+
+Trên Render, nhớ:
+
+- `FRONTEND_URL` phải đúng domain frontend
+- `VITE_API_URL` phải đúng domain backend
+
+### 4) Lưu ý quan trọng
+
+- MongoDB local `127.0.0.1:27017` chỉ dùng cho máy cá nhân, không dùng trên Render
+- Nếu không có MongoDB cloud, backend sẽ không chạy được trên Render
+- Nếu frontend gọi API sai URL, kiểm tra lại `frontend/.env` và biến `VITE_API_URL`
+
+### 5) Thứ tự deploy khuyến nghị
+
+1. Deploy backend trước
+2. Lấy URL backend chính thức
+3. Deploy frontend và trỏ `VITE_API_URL` về backend đó
+4. Cập nhật lại `FRONTEND_URL` ở backend nếu đổi domain frontend
+
 ## Thanh toán chuyển khoản tự động (webhook)
 
 Trong thực tế, để hệ thống tự đổi trạng thái sau khi khách chuyển khoản, cần tích hợp dịch vụ đối soát giao dịch/cổng thanh toán có **webhook** (thay vì để khách bấm "Tôi đã chuyển khoản").

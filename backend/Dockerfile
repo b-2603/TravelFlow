@@ -1,6 +1,7 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.2-cli-alpine
 
-# System dependencies
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 RUN apk add --no-cache \
     bash \
     git \
@@ -16,24 +17,24 @@ RUN apk add --no-cache \
     curl \
     openssh-client
 
-# PHP extensions
 RUN docker-php-ext-install pdo zip intl
 RUN pecl install mongodb && docker-php-ext-enable mongodb
 
-# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www/backend
+WORKDIR /var/www/html
 
-# Copy only composer files first for better layer caching
 COPY composer.json composer.lock* ./
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
-# Copy the application source
 COPY . .
 
-# Run any app-specific setup steps
 RUN composer dump-autoload --optimize
+RUN php artisan package:discover --ansi
+RUN php artisan config:clear || true
+RUN php artisan cache:clear || true
 
-EXPOSE 9000
-CMD ["php-fpm"]
+ENV PORT=10000
+EXPOSE 10000
+
+CMD sh -c "php artisan serve --host 0.0.0.0 --port ${PORT:-10000}"
