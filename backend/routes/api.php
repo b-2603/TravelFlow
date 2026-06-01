@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\GuideController;
 use App\Http\Controllers\Api\PartnerController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\FinanceReportExportController;
 use App\Http\Controllers\Api\NewsPromotionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\TourController;
@@ -124,7 +125,7 @@ Route::middleware('jwt')->group(function () {
         Route::post('/accountant/refund-requests/{id}/refunded', [PaymentController::class, 'markRefunded']);
         Route::get('/accountant/partner-liabilities', [PaymentController::class, 'partnerLiabilities']);
         Route::get('/accountant/reports', [PaymentController::class, 'financeReport']);
-        Route::get('/accountant/reports/export', [PaymentController::class, 'exportFinanceReport']);
+        Route::get('/accountant/reports/export', [FinanceReportExportController::class, 'export']);
     });
 
     Route::middleware('role:admin|accountant')->prefix('admin')->group(function () {
