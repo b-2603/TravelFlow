@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAuth } from '../hooks/useAuth';
 import { getRoleLabel, getWorkspacePath } from '../utils/workspace';
+import { resolveAvatarUrl } from '../utils/avatar';
 
 function titleFromPath(pathname) {
   const segments = pathname.split('/').filter(Boolean);
@@ -36,9 +37,7 @@ export default function AdminLayout() {
   const { role, user } = useAuth();
   const title = titleFromPath(location.pathname);
   const workspacePath = getWorkspacePath(role);
-  const avatar =
-    user?.avatar ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=0a5c86&color=fff`;
+  const avatar = resolveAvatarUrl(user?.avatar, user?.updated_at, user?.name || 'User');
 
   return (
     <div className="d-flex min-vh-100 bg-light tf-admin-shell">

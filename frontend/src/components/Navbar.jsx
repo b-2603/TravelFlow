@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getRoleLabel, getWorkspacePath, isInternalRole } from '../utils/workspace';
+import { resolveAvatarUrl } from '../utils/avatar';
 
 function NavItem({ to, children }) {
   return (
@@ -16,7 +17,7 @@ export default function Navbar() {
   const workspacePath = getWorkspacePath(role);
   const showWorkspaceLink = isAuthenticated && isInternalRole(role);
   const isCustomerView = !isAuthenticated || role === 'customer';
-  const avatar = user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=0a5c86&color=fff`;
+  const avatar = resolveAvatarUrl(user?.avatar, user?.updated_at, user?.name || 'User');
 
   const handleLogout = async () => {
     await logout();

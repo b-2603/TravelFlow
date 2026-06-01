@@ -5,6 +5,7 @@ import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import { userAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { resolveAvatarUrl } from '../utils/avatar';
 
 const schema = Yup.object({
   name: Yup.string().required('Vui lòng nhập họ tên'),
@@ -36,7 +37,7 @@ export default function Profile() {
       return URL.createObjectURL(avatarFile);
     }
 
-    return profile?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&background=0a5c86&color=fff&size=240`;
+    return resolveAvatarUrl(profile?.avatar, profile?.updated_at, profile?.name || 'User');
   }, [avatarFile, profile?.avatar]);
 
   const updateMutation = useMutation({
