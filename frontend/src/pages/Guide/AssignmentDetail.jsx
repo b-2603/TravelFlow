@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { guideAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import { formatDate, statusBadgeClass } from '../../utils/formatters';
 
 function guideProgressLabel(status) {
@@ -37,6 +38,8 @@ function fileListToFormData(formData, files) {
 export default function AssignmentDetail() {
   const { tourId, departureDate } = useParams();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const guideCacheKey = user?.id || user?._id || user?.email || user?.username || 'me';
   const [progressStatus, setProgressStatus] = useState('scheduled');
   const [progressNote, setProgressNote] = useState('');
   const [progressDayNumber, setProgressDayNumber] = useState(1);
@@ -58,7 +61,7 @@ export default function AssignmentDetail() {
   const [dayNoteNumber, setDayNoteNumber] = useState(1);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['guide-assignment-detail', tourId, departureDate],
+    queryKey: ['guide-assignment-detail', guideCacheKey, tourId, departureDate],
     queryFn: async () => {
       if (!tourId) return null;
       const response = await guideAPI.showAssignment(tourId, departureDate);
@@ -110,11 +113,12 @@ export default function AssignmentDetail() {
   }, [assignment]);
 
   const refreshData = () => {
-    queryClient.invalidateQueries({ queryKey: ['guide-assignment-detail', tourId, departureDate] });
+    queryClient.invalidateQueries({ queryKey: ['guide-assignment-detail'] });
     queryClient.invalidateQueries({ queryKey: ['guide-assignments'] });
     queryClient.invalidateQueries({ queryKey: ['guide-dashboard'] });
     queryClient.invalidateQueries({ queryKey: ['guide-history'] });
     queryClient.invalidateQueries({ queryKey: ['guide-notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['guide-assignment-summary'] });
   };
 
   const updateProgressMutation = useMutation({

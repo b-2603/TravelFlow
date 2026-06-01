@@ -23,20 +23,16 @@ class GuideController extends Controller
     ) {
     }
 
-    private function guideTourQuery(string $guideId)
-    {
-        return Tour::whereNull('deleted_at')
-            ->where(function ($query) use ($guideId) {
-                $query->where('assigned_guide_id', $guideId)
-                      ->orWhere('departures.assigned_guide_id', $guideId);
-            });
-    }
-
     private function getAssignedTours(string $guideId)
     {
-        return $this->guideTourQuery($guideId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        return Tour::query()
+            ->whereNull('deleted_at')
+            ->where('status', 'approved')
+            ->orderByDesc('created_at')
+            ->with(['bookings.user', 'guide'])
+            ->get()
+            ->filter(fn (Tour $tour) => $this->guideHasPermission($tour, $guideId))
+            ->values();
     }
 
     private function guideHasPermission(Tour $tour, string $guideId): bool

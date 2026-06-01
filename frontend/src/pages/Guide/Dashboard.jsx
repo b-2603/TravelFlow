@@ -1,11 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { guideAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import { formatDate } from '../../utils/formatters';
 
 export default function GuideDashboard() {
+  const { user } = useAuth();
+  const guideCacheKey = user?.id || user?._id || user?.email || user?.username || 'me';
+
   const { data: payload = {}, isLoading } = useQuery({
-    queryKey: ['guide-dashboard'],
+    queryKey: ['guide-dashboard', guideCacheKey],
     queryFn: async () => (await guideAPI.dashboard()).data?.data ?? {},
   });
 

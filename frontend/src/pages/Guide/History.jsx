@@ -1,11 +1,15 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { guideAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import { formatDate, statusBadgeClass } from '../../utils/formatters';
 
 export default function GuideHistory() {
+  const { user } = useAuth();
+  const guideCacheKey = user?.id || user?._id || user?.email || user?.username || 'me';
+
   const { data: assignments = [], isLoading } = useQuery({
-    queryKey: ['guide-history'],
+    queryKey: ['guide-history', guideCacheKey],
     queryFn: async () => (await guideAPI.assignments()).data?.data ?? [],
   });
 

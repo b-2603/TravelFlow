@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import { guideAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import { formatDate, statusBadgeClass } from '../../utils/formatters';
 
 const assignmentTabs = [
@@ -54,6 +55,8 @@ function assignmentStateClass(state) {
 
 export default function Assignments() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const guideCacheKey = user?.id || user?._id || user?.email || user?.username || 'me';
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedAssignment, setSelectedAssignment] = useState(null);
@@ -68,7 +71,7 @@ export default function Assignments() {
   const [imageFiles, setImageFiles] = useState([]);
 
   const { data: assignments = [], isLoading } = useQuery({
-    queryKey: ['guide-assignments'],
+    queryKey: ['guide-assignments', guideCacheKey],
     queryFn: async () => (await guideAPI.assignments()).data?.data ?? [],
   });
 
@@ -103,6 +106,11 @@ export default function Assignments() {
       setAttendance([]);
       setImageFiles([]);
       queryClient.invalidateQueries({ queryKey: ['guide-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['guide-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['guide-history'] });
+      queryClient.invalidateQueries({ queryKey: ['guide-notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['guide-assignment-detail'] });
+      queryClient.invalidateQueries({ queryKey: ['guide-assignment-summary'] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
     },
     onError: (error) => {

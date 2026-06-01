@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { guideAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import { formatDate } from '../../utils/formatters';
 
 export default function GuideNotifications() {
+  const { user } = useAuth();
+  const guideCacheKey = user?.id || user?._id || user?.email || user?.username || 'me';
+
   const { data = {}, isLoading, error } = useQuery({
-    queryKey: ['guide-notifications'],
+    queryKey: ['guide-notifications', guideCacheKey],
     queryFn: async () => (await guideAPI.notifications()).data?.data ?? {},
   });
 

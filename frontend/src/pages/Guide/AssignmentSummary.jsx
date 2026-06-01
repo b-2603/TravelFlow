@@ -2,13 +2,16 @@ import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { guideAPI } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 import { formatDate } from '../../utils/formatters';
 
 export default function AssignmentSummary() {
   const { tourId, departureDate } = useParams();
+  const { user } = useAuth();
+  const guideCacheKey = user?.id || user?._id || user?.email || user?.username || 'me';
 
   const { data, isLoading } = useQuery({
-    queryKey: ['guide-assignment-summary', tourId, departureDate],
+    queryKey: ['guide-assignment-summary', guideCacheKey, tourId, departureDate],
     queryFn: async () => {
       if (!tourId) return null;
       const response = await guideAPI.showAssignment(tourId, departureDate);
