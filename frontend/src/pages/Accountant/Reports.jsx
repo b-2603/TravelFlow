@@ -9,8 +9,33 @@ function downloadBlob(blob, filename) {
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
+  document.body.appendChild(link);
   link.click();
-  window.URL.revokeObjectURL(url);
+  link.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+}
+
+function getFilenameFromDisposition(disposition, fallback) {
+  const utf8Match = disposition?.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) return decodeURIComponent(utf8Match[1].replaceAll('"', ''));
+
+  const match = disposition?.match(/filename="?([^";]+)"?/i);
+  return match?.[1] || fallback;
+}
+
+async function readBlobError(error) {
+  const blob = error?.response?.data;
+  if (!(blob instanceof Blob)) return error?.response?.data?.message || 'Không thể xuất báo cáo lúc này.';
+
+  const text = await blob.text();
+  if (!text) return 'Không thể xuất báo cáo lúc này.';
+
+  try {
+    const parsed = JSON.parse(text);
+    return parsed?.message || 'Không thể xuất báo cáo lúc này.';
+  } catch {
+    return text.slice(0, 180);
+  }
 }
 
 export default function Reports() {
@@ -30,10 +55,12 @@ export default function Reports() {
     mutationFn: ({ format }) => paymentAPI.exportFinanceReport({ month, format }),
     onSuccess: (response, variables) => {
       const extension = variables.format === 'pdf' ? 'pdf' : 'csv';
-      downloadBlob(response.data, `bao-cao-tai-chinh-${month}.${extension}`);
+      const fallbackName = `bao-cao-tai-chinh-${month}.${extension}`;
+      const filename = getFilenameFromDisposition(response.headers?.['content-disposition'], fallbackName);
+      downloadBlob(response.data, filename);
       toast.success(`Đã xuất báo cáo ${variables.format.toUpperCase()}`);
     },
-    onError: () => toast.error('Không thể xuất báo cáo lúc này.'),
+    onError: async (error) => toast.error(await readBlobError(error)),
   });
 
   const report = reportPayload?.summary || {};

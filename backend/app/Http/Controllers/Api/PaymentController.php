@@ -635,20 +635,30 @@ class PaymentController extends Controller
     {
         $month = $request->string('month', Carbon::now()->format('Y-m'))->toString();
         $format = $request->string('format', 'csv')->lower()->toString();
+
+        if (! in_array($format, ['csv', 'pdf'], true)) {
+            return $this->apiResponse(false, null, 'Định dạng xuất báo cáo không hợp lệ.', 422);
+        }
+
         $data = $this->buildFinanceReportData($month);
+        $filename = 'bao-cao-tai-chinh-'.$month.'.'.$format;
 
         if ($format === 'pdf') {
             $pdf = Pdf::loadView('pdf.finance-report', [
                 'month' => $data['month'],
                 'summary' => $data['summary'],
+                'paymentMethods' => $data['payment_methods'],
+                'paymentStatuses' => $data['payment_statuses'],
+                'refundStatuses' => $data['refund_statuses'],
+                'monthlyTrend' => $data['monthly_trend'],
                 'liabilities' => $data['liabilities'],
                 'generatedAt' => Carbon::now(),
-            ])->setPaper('a4');
-
-            return response($pdf->output(), 200, [
-                'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="bao-cao-tai-chinh-'.$month.'.pdf"',
+            ])->setPaper('a4')->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isRemoteEnabled' => true,
             ]);
+
+            return $pdf->download($filename);
         }
 
         $rows = [
@@ -663,9 +673,41 @@ class PaymentController extends Controller
             ['So booking', $data['summary']['bookings_count']],
             ['So yeu cau hoan tien', $data['summary']['refund_requests_count']],
             [],
-            ['Cong no doi tac'],
-            ['Cong ty', 'Loai dich vu', 'Don da xac nhan', 'Phai tra', 'Da tra', 'Con no'],
+            ['Phuong thuc thanh toan'],
+            ['Phuong thuc', 'So giao dich', 'So tien'],
         ];
+
+        foreach ($data['payment_methods'] as $item) {
+            $rows[] = [$item['method'], $item['count'], $item['amount']];
+        }
+
+        $rows[] = [];
+        $rows[] = ['Trang thai thanh toan'];
+        $rows[] = ['Trang thai', 'So giao dich', 'So tien'];
+
+        foreach ($data['payment_statuses'] as $item) {
+            $rows[] = [$item['status'], $item['count'], $item['amount']];
+        }
+
+        $rows[] = [];
+        $rows[] = ['Trang thai hoan tien'];
+        $rows[] = ['Trang thai', 'So yeu cau', 'So tien'];
+
+        foreach ($data['refund_statuses'] as $item) {
+            $rows[] = [$item['status'], $item['count'], $item['amount']];
+        }
+
+        $rows[] = [];
+        $rows[] = ['Xu huong 6 thang'];
+        $rows[] = ['Thang', 'Doanh thu', 'Hoan tien', 'Yeu cau hoan tien'];
+
+        foreach ($data['monthly_trend'] as $item) {
+            $rows[] = [$item['label'], $item['revenue'], $item['refunds'], $item['requests']];
+        }
+
+        $rows[] = [];
+        $rows[] = ['Cong no doi tac'];
+        $rows[] = ['Cong ty', 'Loai dich vu', 'Don da xac nhan', 'Phai tra', 'Da tra', 'Con no'];
 
         foreach ($data['liabilities'] as $item) {
             $rows[] = [
@@ -678,17 +720,17 @@ class PaymentController extends Controller
             ];
         }
 
-        $stream = fopen('php://temp', 'r+');
-        foreach ($rows as $row) {
-            fputcsv($stream, $row);
-        }
-        rewind($stream);
-        $csv = "\xEF\xBB\xBF".(stream_get_contents($stream) ?: '');
-        fclose($stream);
+        return response()->streamDownload(function () use ($rows) {
+            $stream = fopen('php://output', 'w');
+            echo "\xEF\xBB\xBF";
 
-        return response($csv, 200, [
+            foreach ($rows as $row) {
+                fputcsv($stream, $row);
+            }
+
+            fclose($stream);
+        }, $filename, [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="bao-cao-tai-chinh-'.$month.'.csv"',
         ]);
     }
 

@@ -125,7 +125,12 @@ export const paymentAPI = {
   markRefunded: (id, payload) => api.post(`/accountant/refund-requests/${id}/refunded`, payload),
   partnerLiabilities: () => api.get('/accountant/partner-liabilities'),
   financeReport: (params) => api.get('/accountant/reports', { params }),
-  exportFinanceReport: (params) => api.get('/accountant/reports/export', { params, responseType: 'blob' }),
+  exportFinanceReport: (params) =>
+    api.get('/accountant/reports/export', {
+      params,
+      responseType: 'blob',
+      headers: { Accept: 'application/pdf,text/csv,*/*' },
+    }),
 };
 
 export const customerAPI = {

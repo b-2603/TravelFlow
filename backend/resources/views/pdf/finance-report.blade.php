@@ -35,6 +35,7 @@
             font-size: 11px;
             text-transform: uppercase;
         }
+        .muted { color: #69809a; }
     </style>
 </head>
 <body>
@@ -58,6 +59,72 @@
             <td width="50%"><div class="card"><div class="label">Số booking trong kỳ</div><div class="value">{{ $summary['bookings_count'] }}</div></div></td>
             <td width="50%"><div class="card"><div class="label">Yêu cầu hoàn tiền</div><div class="value">{{ $summary['refund_requests_count'] }}</div></div></td>
         </tr>
+    </table>
+
+    <div class="section-title">Breakdown giao dịch</div>
+    <table class="report">
+        <thead>
+            <tr>
+                <th>Nhóm</th>
+                <th>Nhãn</th>
+                <th>Số lượng</th>
+                <th>Số tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($paymentMethods as $item)
+                <tr>
+                    <td>Phương thức</td>
+                    <td>{{ strtoupper($item['method']) }}</td>
+                    <td>{{ $item['count'] }}</td>
+                    <td>{{ number_format((float) $item['amount'], 0, ',', '.') }} đ</td>
+                </tr>
+            @empty
+                <tr><td colspan="4" class="muted">Chưa có dữ liệu phương thức thanh toán.</td></tr>
+            @endforelse
+
+            @foreach($paymentStatuses as $item)
+                <tr>
+                    <td>Thanh toán</td>
+                    <td>{{ $item['status'] }}</td>
+                    <td>{{ $item['count'] }}</td>
+                    <td>{{ number_format((float) $item['amount'], 0, ',', '.') }} đ</td>
+                </tr>
+            @endforeach
+
+            @foreach($refundStatuses as $item)
+                <tr>
+                    <td>Hoàn tiền</td>
+                    <td>{{ $item['status'] }}</td>
+                    <td>{{ $item['count'] }}</td>
+                    <td>{{ number_format((float) $item['amount'], 0, ',', '.') }} đ</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <div class="section-title">Xu hướng 6 tháng</div>
+    <table class="report">
+        <thead>
+            <tr>
+                <th>Tháng</th>
+                <th>Doanh thu</th>
+                <th>Hoàn tiền</th>
+                <th>Yêu cầu hoàn tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($monthlyTrend as $item)
+                <tr>
+                    <td>{{ $item['label'] }}</td>
+                    <td>{{ number_format((float) $item['revenue'], 0, ',', '.') }} đ</td>
+                    <td>{{ number_format((float) $item['refunds'], 0, ',', '.') }} đ</td>
+                    <td>{{ $item['requests'] }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="4" class="muted">Chưa có dữ liệu xu hướng.</td></tr>
+            @endforelse
+        </tbody>
     </table>
 
     <div class="section-title">Công nợ đối tác</div>
