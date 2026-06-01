@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\NewsPromotionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\TourController;
 use App\Http\Controllers\Api\UserController;
+use App\Models\Tour;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,31 @@ Route::get('/health', function () {
         'message' => 'API is reachable.',
         'code' => 200,
     ]);
+});
+
+Route::get('/debug/mongo', function () {
+    try {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'tour_count' => Tour::count(),
+                'mongodb_uri_present' => filled(env('MONGODB_URI')),
+                'mongodb_database' => env('MONGODB_DATABASE', 'travel_management'),
+            ],
+            'message' => 'MongoDB connection is working.',
+            'code' => 200,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'data' => [
+                'exception_class' => get_class($e),
+                'exception_message' => $e->getMessage(),
+            ],
+            'message' => 'MongoDB debug failed.',
+            'code' => 500,
+        ], 500);
+    }
 });
 
 Route::get('/bootstrap', function (Request $request) {
