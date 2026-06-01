@@ -14,10 +14,11 @@ RUN apk add --no-cache \
     make \
     linux-headers \
     icu-dev \
+    openssl-dev \
     curl \
     openssh-client
 
-RUN docker-php-ext-install pdo zip intl
+RUN docker-php-ext-install pdo zip intl openssl
 RUN pecl install mongodb && docker-php-ext-enable mongodb
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
