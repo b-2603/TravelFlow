@@ -13,16 +13,16 @@ function emptyForm() {
     status: 'published',
     coverImage: '',
     coverFile: null,
-    detailSectionsJson: '[]',
-    keyHighlightsJson: '[]',
-    benefitsJson: '[]',
-    conditionsJson: '[]',
-    targetAudienceJson: '[]',
-    applicableToursJson: '[]',
-    bookingChannelsJson: '[]',
-    faqJson: '[]',
-    contactInfoJson: '{}',
-    relatedLinksJson: '[]',
+    detailSections: [],
+    keyHighlights: [],
+    benefits: [],
+    conditions: [],
+    targetAudience: [],
+    applicableTours: [],
+    bookingChannels: [],
+    faq: [],
+    contactInfo: { hotline: '', email: '' },
+    relatedLinks: [],
     validFrom: '',
     validUntil: '',
   };
@@ -30,6 +30,139 @@ function emptyForm() {
 
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function normalizeList(items) {
+  return Array.isArray(items) ? items.filter(Boolean) : [];
+}
+
+function TextListEditor({ label, items, onChange, placeholder = 'Nhập nội dung' }) {
+  const list = normalizeList(items);
+
+  const updateItem = (index, value) => {
+    const next = [...list];
+    next[index] = value;
+    onChange(next);
+  };
+
+  return (
+    <div>
+      <label className="form-label fw-semibold">{label}</label>
+      <div className="d-grid gap-2">
+        {list.length === 0 ? <div className="small text-muted">Chưa có mục nào.</div> : null}
+        {list.map((item, index) => (
+          <div className="d-flex gap-2" key={`${label}-${index}`}>
+            <input className="form-control rounded-pill" value={item} placeholder={placeholder} onChange={(e) => updateItem(index, e.target.value)} />
+            <button type="button" className="btn btn-outline-danger rounded-pill" onClick={() => onChange(list.filter((_, itemIndex) => itemIndex !== index))}>
+              Xóa
+            </button>
+          </div>
+        ))}
+        <button type="button" className="btn btn-outline-primary rounded-pill" onClick={() => onChange([...list, ''])}>
+          Thêm mục
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SectionEditor({ items, onChange }) {
+  const list = Array.isArray(items) ? items : [];
+
+  const updateItem = (index, key, value) => {
+    const next = [...list];
+    next[index] = { ...next[index], [key]: value };
+    onChange(next);
+  };
+
+  return (
+    <div>
+      <label className="form-label fw-semibold">Mục chi tiết</label>
+      <div className="d-grid gap-3">
+        {list.length === 0 ? <div className="small text-muted">Chưa có mục chi tiết.</div> : null}
+        {list.map((item, index) => (
+          <div className="rounded-4 border bg-white p-3" key={`section-${index}`}>
+            <input className="form-control rounded-pill mb-2" value={item.title || ''} placeholder="Tiêu đề mục" onChange={(e) => updateItem(index, 'title', e.target.value)} />
+            <textarea className="form-control rounded-4" rows="3" value={item.content || ''} placeholder="Nội dung mục" onChange={(e) => updateItem(index, 'content', e.target.value)} />
+            <button type="button" className="btn btn-outline-danger btn-sm rounded-pill mt-2" onClick={() => onChange(list.filter((_, itemIndex) => itemIndex !== index))}>
+              Xóa mục
+            </button>
+          </div>
+        ))}
+        <button type="button" className="btn btn-outline-primary rounded-pill" onClick={() => onChange([...list, { title: '', content: '' }])}>
+          Thêm mục chi tiết
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FaqEditor({ items, onChange }) {
+  const list = Array.isArray(items) ? items : [];
+
+  const updateItem = (index, key, value) => {
+    const next = [...list];
+    next[index] = { ...next[index], [key]: value };
+    onChange(next);
+  };
+
+  return (
+    <div>
+      <label className="form-label fw-semibold">Câu hỏi thường gặp</label>
+      <div className="d-grid gap-3">
+        {list.length === 0 ? <div className="small text-muted">Chưa có câu hỏi.</div> : null}
+        {list.map((item, index) => (
+          <div className="rounded-4 border bg-white p-3" key={`faq-${index}`}>
+            <input className="form-control rounded-pill mb-2" value={item.question || ''} placeholder="Câu hỏi" onChange={(e) => updateItem(index, 'question', e.target.value)} />
+            <textarea className="form-control rounded-4" rows="2" value={item.answer || ''} placeholder="Câu trả lời" onChange={(e) => updateItem(index, 'answer', e.target.value)} />
+            <button type="button" className="btn btn-outline-danger btn-sm rounded-pill mt-2" onClick={() => onChange(list.filter((_, itemIndex) => itemIndex !== index))}>
+              Xóa câu hỏi
+            </button>
+          </div>
+        ))}
+        <button type="button" className="btn btn-outline-primary rounded-pill" onClick={() => onChange([...list, { question: '', answer: '' }])}>
+          Thêm câu hỏi
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function LinkEditor({ items, onChange }) {
+  const list = Array.isArray(items) ? items : [];
+
+  const updateItem = (index, key, value) => {
+    const next = [...list];
+    next[index] = { ...next[index], [key]: value };
+    onChange(next);
+  };
+
+  return (
+    <div>
+      <label className="form-label fw-semibold">Liên kết liên quan</label>
+      <div className="d-grid gap-2">
+        {list.length === 0 ? <div className="small text-muted">Chưa có liên kết.</div> : null}
+        {list.map((item, index) => (
+          <div className="row g-2" key={`link-${index}`}>
+            <div className="col-md-5">
+              <input className="form-control rounded-pill" value={item.label || ''} placeholder="Tên liên kết" onChange={(e) => updateItem(index, 'label', e.target.value)} />
+            </div>
+            <div className="col-md-5">
+              <input className="form-control rounded-pill" value={item.url || ''} placeholder="/tours hoặc https://..." onChange={(e) => updateItem(index, 'url', e.target.value)} />
+            </div>
+            <div className="col-md-2">
+              <button type="button" className="btn btn-outline-danger rounded-pill w-100" onClick={() => onChange(list.filter((_, itemIndex) => itemIndex !== index))}>
+                Xóa
+              </button>
+            </div>
+          </div>
+        ))}
+        <button type="button" className="btn btn-outline-primary rounded-pill" onClick={() => onChange([...list, { label: '', url: '' }])}>
+          Thêm liên kết
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function NewsPromotionsManager() {
@@ -81,28 +214,19 @@ export default function NewsPromotionsManager() {
       status: item.status,
       coverImage: item.cover_image || '',
       coverFile: null,
-      detailSectionsJson: JSON.stringify(item.detail_sections || [], null, 2),
-      keyHighlightsJson: JSON.stringify(item.key_highlights || [], null, 2),
-      benefitsJson: JSON.stringify(item.benefits || [], null, 2),
-      conditionsJson: JSON.stringify(item.conditions || [], null, 2),
-      targetAudienceJson: JSON.stringify(item.target_audience || [], null, 2),
-      applicableToursJson: JSON.stringify(item.applicable_tours || [], null, 2),
-      bookingChannelsJson: JSON.stringify(item.booking_channels || [], null, 2),
-      faqJson: JSON.stringify(item.faq || [], null, 2),
-      contactInfoJson: JSON.stringify(item.contact_info || {}, null, 2),
-      relatedLinksJson: JSON.stringify(item.related_links || [], null, 2),
+      detailSections: item.detail_sections || [],
+      keyHighlights: item.key_highlights || [],
+      benefits: item.benefits || [],
+      conditions: item.conditions || [],
+      targetAudience: item.target_audience || [],
+      applicableTours: item.applicable_tours || [],
+      bookingChannels: item.booking_channels || [],
+      faq: item.faq || [],
+      contactInfo: item.contact_info || { hotline: '', email: '' },
+      relatedLinks: item.related_links || [],
       validFrom: item.valid_from || '',
       validUntil: item.valid_until || '',
     });
-  };
-
-  const safeJson = (text, fallback) => {
-    try {
-      const parsed = JSON.parse(text || '');
-      return parsed ?? fallback;
-    } catch {
-      return fallback;
-    }
   };
 
   const handleSubmit = async (event) => {
@@ -117,16 +241,16 @@ export default function NewsPromotionsManager() {
     payload.append('status', form.status);
     payload.append('valid_from', form.validFrom || '');
     payload.append('valid_until', form.validUntil || '');
-    payload.append('detail_sections', JSON.stringify(safeJson(form.detailSectionsJson, [])));
-    payload.append('key_highlights', JSON.stringify(safeJson(form.keyHighlightsJson, [])));
-    payload.append('benefits', JSON.stringify(safeJson(form.benefitsJson, [])));
-    payload.append('conditions', JSON.stringify(safeJson(form.conditionsJson, [])));
-    payload.append('target_audience', JSON.stringify(safeJson(form.targetAudienceJson, [])));
-    payload.append('applicable_tours', JSON.stringify(safeJson(form.applicableToursJson, [])));
-    payload.append('booking_channels', JSON.stringify(safeJson(form.bookingChannelsJson, [])));
-    payload.append('faq', JSON.stringify(safeJson(form.faqJson, [])));
-    payload.append('contact_info', JSON.stringify(safeJson(form.contactInfoJson, {})));
-    payload.append('related_links', JSON.stringify(safeJson(form.relatedLinksJson, [])));
+    payload.append('detail_sections', JSON.stringify(form.detailSections || []));
+    payload.append('key_highlights', JSON.stringify(form.keyHighlights || []));
+    payload.append('benefits', JSON.stringify(form.benefits || []));
+    payload.append('conditions', JSON.stringify(form.conditions || []));
+    payload.append('target_audience', JSON.stringify(form.targetAudience || []));
+    payload.append('applicable_tours', JSON.stringify(form.applicableTours || []));
+    payload.append('booking_channels', JSON.stringify(form.bookingChannels || []));
+    payload.append('faq', JSON.stringify(form.faq || []));
+    payload.append('contact_info', JSON.stringify(form.contactInfo || {}));
+    payload.append('related_links', JSON.stringify(form.relatedLinks || []));
     if (form.coverFile) payload.append('cover_image_file', form.coverFile);
     if (!form.coverFile && form.coverImage) payload.append('cover_image', form.coverImage);
 
@@ -286,7 +410,8 @@ export default function NewsPromotionsManager() {
 
               <div className="col-12 mt-3">
                 <div className="border rounded-4 p-3 bg-light">
-                  <div className="fw-bold mb-3">Thông tin chi tiết nâng cao</div>
+                  <div className="fw-bold">Thông tin bổ sung cho trang chi tiết</div>
+                  <div className="small text-muted mb-3">Các mục này không bắt buộc; thêm khi cần làm rõ ưu đãi hoặc bài viết.</div>
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Hiệu lực từ</label>
@@ -297,44 +422,78 @@ export default function NewsPromotionsManager() {
                       <input type="date" className="form-control rounded-pill" value={form.validUntil} onChange={(e) => setForm((c) => ({ ...c, validUntil: e.target.value }))} />
                     </div>
                     <div className="col-12">
-                      <label className="form-label fw-semibold">Điểm nổi bật (JSON array)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="3" value={form.keyHighlightsJson} onChange={(e) => setForm((c) => ({ ...c, keyHighlightsJson: e.target.value }))} />
+                      <TextListEditor
+                        label="Điểm nổi bật"
+                        items={form.keyHighlights}
+                        placeholder="Ví dụ: Giảm 15% cho tour hè"
+                        onChange={(keyHighlights) => setForm((c) => ({ ...c, keyHighlights }))}
+                      />
                     </div>
                     <div className="col-12">
-                      <label className="form-label fw-semibold">Lợi ích (JSON array)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="3" value={form.benefitsJson} onChange={(e) => setForm((c) => ({ ...c, benefitsJson: e.target.value }))} />
+                      <TextListEditor
+                        label="Lợi ích"
+                        items={form.benefits}
+                        placeholder="Ví dụ: Tặng bữa tối đặc sản"
+                        onChange={(benefits) => setForm((c) => ({ ...c, benefits }))}
+                      />
                     </div>
                     <div className="col-12">
-                      <label className="form-label fw-semibold">Điều kiện áp dụng (JSON array)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="3" value={form.conditionsJson} onChange={(e) => setForm((c) => ({ ...c, conditionsJson: e.target.value }))} />
+                      <TextListEditor
+                        label="Điều kiện áp dụng"
+                        items={form.conditions}
+                        placeholder="Ví dụ: Áp dụng cho booking từ 2 khách"
+                        onChange={(conditions) => setForm((c) => ({ ...c, conditions }))}
+                      />
                     </div>
                     <div className="col-12">
-                      <label className="form-label fw-semibold">Mục chi tiết (JSON array of objects)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="4" value={form.detailSectionsJson} onChange={(e) => setForm((c) => ({ ...c, detailSectionsJson: e.target.value }))} />
+                      <SectionEditor items={form.detailSections} onChange={(detailSections) => setForm((c) => ({ ...c, detailSections }))} />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Đối tượng áp dụng (JSON array)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="3" value={form.targetAudienceJson} onChange={(e) => setForm((c) => ({ ...c, targetAudienceJson: e.target.value }))} />
+                      <TextListEditor
+                        label="Đối tượng áp dụng"
+                        items={form.targetAudience}
+                        placeholder="Ví dụ: Gia đình, nhóm bạn"
+                        onChange={(targetAudience) => setForm((c) => ({ ...c, targetAudience }))}
+                      />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Tour áp dụng (JSON array)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="3" value={form.applicableToursJson} onChange={(e) => setForm((c) => ({ ...c, applicableToursJson: e.target.value }))} />
+                      <TextListEditor
+                        label="Tour áp dụng"
+                        items={form.applicableTours}
+                        placeholder="Ví dụ: Đà Nẵng 3N2Đ"
+                        onChange={(applicableTours) => setForm((c) => ({ ...c, applicableTours }))}
+                      />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Kênh đặt (JSON array)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="3" value={form.bookingChannelsJson} onChange={(e) => setForm((c) => ({ ...c, bookingChannelsJson: e.target.value }))} />
+                      <TextListEditor
+                        label="Kênh đặt"
+                        items={form.bookingChannels}
+                        placeholder="Ví dụ: Website, hotline, văn phòng"
+                        onChange={(bookingChannels) => setForm((c) => ({ ...c, bookingChannels }))}
+                      />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Câu hỏi thường gặp (JSON array)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="3" value={form.faqJson} onChange={(e) => setForm((c) => ({ ...c, faqJson: e.target.value }))} />
+                      <FaqEditor items={form.faq} onChange={(faq) => setForm((c) => ({ ...c, faq }))} />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Thông tin liên hệ (JSON object)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="3" value={form.contactInfoJson} onChange={(e) => setForm((c) => ({ ...c, contactInfoJson: e.target.value }))} />
+                      <label className="form-label fw-semibold">Thông tin liên hệ</label>
+                      <div className="d-grid gap-2">
+                        <input
+                          className="form-control rounded-pill"
+                          value={form.contactInfo?.hotline || ''}
+                          placeholder="Hotline"
+                          onChange={(e) => setForm((c) => ({ ...c, contactInfo: { ...(c.contactInfo || {}), hotline: e.target.value } }))}
+                        />
+                        <input
+                          className="form-control rounded-pill"
+                          value={form.contactInfo?.email || ''}
+                          placeholder="Email"
+                          onChange={(e) => setForm((c) => ({ ...c, contactInfo: { ...(c.contactInfo || {}), email: e.target.value } }))}
+                        />
+                      </div>
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Liên kết liên quan (JSON array)</label>
-                      <textarea className="form-control rounded-4 font-monospace" rows="3" value={form.relatedLinksJson} onChange={(e) => setForm((c) => ({ ...c, relatedLinksJson: e.target.value }))} />
+                      <LinkEditor items={form.relatedLinks} onChange={(relatedLinks) => setForm((c) => ({ ...c, relatedLinks }))} />
                     </div>
                   </div>
                 </div>
