@@ -817,7 +817,14 @@ class PaymentController extends Controller
         $partners = Partner::active()->get();
 
         return $partners->map(function ($partner) {
-            $tourIds = Tour::whereIn('linked_partner_ids', [(string) $partner->_id])->pluck('_id');
+            $tourIds = Tour::whereNull('deleted_at')
+                ->get()
+                ->filter(function ($tour) use ($partner) {
+                    return collect($tour->linked_partner_ids ?? [])
+                        ->map(fn ($id) => (string) $id)
+                        ->contains((string) $partner->_id);
+                })
+                ->pluck('_id');
             $bookings = $tourIds->isEmpty()
                 ? collect()
                 : Booking::whereIn('tour_id', $tourIds->all())->whereIn('status', ['confirmed', 'completed'])->get();

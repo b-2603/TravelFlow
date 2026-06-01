@@ -186,10 +186,15 @@ class PartnerController extends Controller
             ->get();
 
         $linkedTours = Tour::whereNull('deleted_at')
-            ->whereIn('linked_partner_ids', [(string) $partner->_id])
             ->with(['creator', 'guide'])
-            ->orderByDesc('updated_at')
-            ->get();
+            ->get()
+            ->filter(function ($tour) use ($partner) {
+                return collect($tour->linked_partner_ids ?? [])
+                    ->map(fn ($id) => (string) $id)
+                    ->contains((string) $partner->_id);
+            })
+            ->sortByDesc('updated_at')
+            ->values();
 
         $linkedTourIds = $linkedTours->pluck('_id')->all();
         $bookings = empty($linkedTourIds)

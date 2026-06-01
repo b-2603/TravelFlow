@@ -1230,6 +1230,258 @@ class InitialDataSeeder extends Seeder
             }
         }
 
+        if (isset($partnerUser, $partnerProfile) && $partnerUser && $partnerProfile) {
+            $demoTourBlueprints = [
+                [
+                    'slug' => 'bien-my-khe-nghi-duong',
+                    'title' => 'Biển Mỹ Khê nghỉ dưỡng',
+                    'destination' => 'Đà Nẵng',
+                    'category' => 'Biển',
+                    'price_per_person' => 3500000,
+                    'departure_date' => Carbon::now()->addDays(8),
+                    'available_slots' => 18,
+                ],
+                [
+                    'slug' => 'da-nang-resort-tron-goi',
+                    'title' => 'Đà Nẵng resort trọn gói',
+                    'destination' => 'Đà Nẵng',
+                    'category' => 'Resort',
+                    'price_per_person' => 4250000,
+                    'departure_date' => Carbon::now()->addDays(12),
+                    'available_slots' => 16,
+                ],
+                [
+                    'slug' => 'hoi-an-van-hoa-ket-hop',
+                    'title' => 'Hội An văn hóa kết hợp',
+                    'destination' => 'Hội An',
+                    'category' => 'Văn hóa',
+                    'price_per_person' => 5750000,
+                    'departure_date' => Carbon::now()->addDays(15),
+                    'available_slots' => 20,
+                ],
+            ];
+
+            $demoTours = collect();
+            foreach ($demoTourBlueprints as $index => $blueprint) {
+                $demoTours->push(Tour::updateOrCreate(
+                    ['slug' => $blueprint['slug']],
+                    [
+                        'title' => $blueprint['title'],
+                        'description' => 'Tour demo phục vụ dashboard đối tác với số liệu cụ thể.',
+                        'destination' => $blueprint['destination'],
+                        'category' => $blueprint['category'],
+                        'duration_days' => 3 + $index,
+                        'max_pax' => 20 + ($index * 2),
+                        'price_per_person' => $blueprint['price_per_person'],
+                        'images' => [
+                            'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
+                        ],
+                        'highlights' => [
+                            'Số liệu thật cho trang tổng quan đối tác',
+                            'Tương thích với dữ liệu booking và payment',
+                        ],
+                        'destination_overview' => 'Tour mẫu dành cho partner dashboard.',
+                        'historical_background' => 'Dữ liệu demo được tạo để hiển thị số liệu cụ thể.',
+                        'local_culture' => ['Ẩm thực địa phương', 'Trải nghiệm nghỉ dưỡng', 'Di chuyển linh hoạt'],
+                        'best_time_to_visit' => 'Quanh năm',
+                        'weather_notes' => 'Phù hợp cho màn hình demo và kiểm thử nội bộ.',
+                        'included_services' => ['Xe đưa đón', 'Lưu trú', 'Hướng dẫn viên'],
+                        'excluded_services' => ['Chi tiêu cá nhân'],
+                        'suitable_for' => ['Gia đình', 'Nhóm bạn'],
+                        'travel_tips' => ['Đặt sớm để giữ chỗ'],
+                        'meeting_point' => 'Điểm đón theo xác nhận',
+                        'itinerary' => [
+                            ['day' => 1, 'title' => 'Khởi hành', 'description' => 'Đón khách và bắt đầu hành trình demo.'],
+                            ['day' => 2, 'title' => 'Trải nghiệm chính', 'description' => 'Tham quan và sử dụng dịch vụ đối tác.'],
+                            ['day' => 3, 'title' => 'Kết thúc', 'description' => 'Tổng kết và tiễn khách.'],
+                        ],
+                        'status' => 'approved',
+                        'approved_at' => Carbon::now()->subDays(10 + $index),
+                        'created_by' => $creator?->_id,
+                        'assigned_guide_id' => $guideUsers->isNotEmpty() ? $guideUsers[$index % $guideUsers->count()]->_id : null,
+                        'linked_partner_ids' => [(string) $partnerProfile->_id],
+                        'departures' => [
+                            [
+                                'date' => $blueprint['departure_date']->toDateString(),
+                                'available_slots' => $blueprint['available_slots'],
+                                'price_override' => null,
+                                'status' => 'active',
+                                'assigned_guide_id' => $guideUsers->isNotEmpty() ? $guideUsers[$index % $guideUsers->count()]->_id : null,
+                            ],
+                        ],
+                    ]
+                ));
+            }
+
+            $demoServices = [
+                [
+                    'name' => 'Phòng Deluxe hướng biển',
+                    'service_category' => 'hotel',
+                    'price' => 1450000,
+                    'unit' => 'phòng/đêm',
+                    'available_quantity' => 12,
+                    'pricing_note' => 'Áp dụng cuối tuần tăng 12%',
+                    'status' => 'active',
+                ],
+                [
+                    'name' => 'Gói buffet sáng & đưa đón',
+                    'service_category' => 'hotel',
+                    'price' => 350000,
+                    'unit' => 'khách',
+                    'available_quantity' => 40,
+                    'pricing_note' => 'Bao gồm 2 chiều đưa đón sân bay',
+                    'status' => 'active',
+                ],
+                [
+                    'name' => 'Dịch vụ spa thư giãn',
+                    'service_category' => 'spa',
+                    'price' => 650000,
+                    'unit' => 'lần',
+                    'available_quantity' => 8,
+                    'pricing_note' => 'Giảm giá cho khách lưu trú từ 2 đêm',
+                    'status' => 'inactive',
+                ],
+            ];
+
+            foreach ($demoServices as $serviceIndex => $serviceData) {
+                PartnerService::updateOrCreate(
+                    [
+                        'partner_id' => $partnerProfile->_id,
+                        'name' => $serviceData['name'],
+                    ],
+                    [
+                        'service_category' => $serviceData['service_category'],
+                        'price' => $serviceData['price'],
+                        'unit' => $serviceData['unit'],
+                        'available_quantity' => $serviceData['available_quantity'],
+                        'pricing_note' => $serviceData['pricing_note'],
+                        'status' => $serviceData['status'],
+                    ]
+                );
+            }
+
+            $demoCustomers = $customers->values();
+            $demoBookings = [
+                [
+                    'note' => 'DEMO-PARTNER-BOOKING-01',
+                    'tour' => $demoTours[0],
+                    'customer' => $demoCustomers[0] ?? null,
+                    'num_pax' => 2,
+                    'total_price' => 7000000,
+                    'status' => 'confirmed',
+                    'payment_status' => 'partial',
+                    'payment_amount' => 3500000,
+                    'paid_at' => Carbon::now()->startOfMonth()->addDays(0),
+                ],
+                [
+                    'note' => 'DEMO-PARTNER-BOOKING-02',
+                    'tour' => $demoTours[1],
+                    'customer' => $demoCustomers[1] ?? null,
+                    'num_pax' => 2,
+                    'total_price' => 4250000,
+                    'status' => 'completed',
+                    'payment_status' => 'paid',
+                    'payment_amount' => 4250000,
+                    'paid_at' => Carbon::now()->startOfMonth()->addDays(1),
+                ],
+                [
+                    'note' => 'DEMO-PARTNER-BOOKING-03',
+                    'tour' => $demoTours[2],
+                    'customer' => $demoCustomers[2] ?? null,
+                    'num_pax' => 1,
+                    'total_price' => 5500000,
+                    'status' => 'confirmed',
+                    'payment_status' => 'partial',
+                    'payment_amount' => 2750000,
+                    'paid_at' => Carbon::now()->startOfMonth()->addDays(2),
+                ],
+                [
+                    'note' => 'DEMO-PARTNER-BOOKING-04',
+                    'tour' => $demoTours[0],
+                    'customer' => $demoCustomers[3] ?? $demoCustomers[0] ?? null,
+                    'num_pax' => 3,
+                    'total_price' => 5000000,
+                    'status' => 'completed',
+                    'payment_status' => 'paid',
+                    'payment_amount' => 5000000,
+                    'paid_at' => Carbon::now()->startOfMonth()->addDays(3),
+                ],
+                [
+                    'note' => 'DEMO-PARTNER-BOOKING-05',
+                    'tour' => $demoTours[1],
+                    'customer' => $demoCustomers[0] ?? null,
+                    'num_pax' => 1,
+                    'total_price' => 3250000,
+                    'status' => 'completed',
+                    'payment_status' => 'paid',
+                    'payment_amount' => 3250000,
+                    'paid_at' => Carbon::now()->startOfMonth()->addDays(4),
+                ],
+            ];
+
+            foreach ($demoBookings as $bookingIndex => $bookingData) {
+                if (! $bookingData['tour'] || ! $bookingData['customer']) {
+                    continue;
+                }
+
+                $booking = Booking::updateOrCreate(
+                    ['note' => $bookingData['note']],
+                    [
+                        'tour_id' => $bookingData['tour']->_id,
+                        'user_id' => $bookingData['customer']->_id,
+                        'assigned_agent_id' => $agent?->_id,
+                        'departure_date' => Carbon::parse($bookingData['tour']->departures[0]['date'] ?? Carbon::now()->addDays($bookingIndex + 7)),
+                        'num_pax' => $bookingData['num_pax'],
+                        'total_price' => $bookingData['total_price'],
+                        'status' => $bookingData['status'],
+                        'passengers' => [
+                            [
+                                'name' => $bookingData['customer']->name,
+                                'dob' => '1995-01-01',
+                                'passport' => 'DEMO'.str_pad((string) ($bookingIndex + 1), 6, '0', STR_PAD_LEFT),
+                            ],
+                        ],
+                        'internal_note' => 'Dữ liệu demo cho dashboard đối tác.',
+                        'special_requirements' => ['Xác nhận trước giờ khởi hành'],
+                        'payment_status' => $bookingData['payment_status'],
+                    ]
+                );
+
+                Payment::updateOrCreate(
+                    ['transaction_id' => $bookingData['note'].'-PAYMENT'],
+                    [
+                        'booking_id' => $booking->_id,
+                        'user_id' => $bookingData['customer']->_id,
+                        'amount' => $bookingData['payment_amount'],
+                        'method' => 'bank',
+                        'payment_scope' => $bookingData['payment_status'] === 'paid' ? 'full' : 'deposit',
+                        'status' => 'success',
+                        'paid_at' => $bookingData['paid_at'],
+                    ]
+                );
+            }
+
+            $linkedTourCount = Tour::whereNull('deleted_at')
+                ->get()
+                ->filter(function ($tour) use ($partnerProfile) {
+                    return collect($tour->linked_partner_ids ?? [])
+                        ->map(fn ($id) => (string) $id)
+                        ->contains((string) $partnerProfile->_id);
+                })
+                ->count();
+
+            $bookingIds = Booking::whereIn('tour_id', $demoTours->pluck('_id')->all())->pluck('_id')->all();
+            $paymentCount = count($demoBookings);
+
+            $this->command->info(sprintf(
+                'Đã tạo demo đối tác: %d dịch vụ, %d tour liên kết, %d booking, %d payment.',
+                PartnerService::where('partner_id', $partnerProfile->_id)->count(),
+                $linkedTourCount,
+                count($bookingIds),
+                $paymentCount
+            ));
+        }
+
         $this->command->info('Đã khởi tạo dữ liệu nền và giao dịch mẫu.');
         return;
 
