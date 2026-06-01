@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 import { paymentAPI } from '../../services/api';
 import {
   formatCurrency,
@@ -180,6 +181,9 @@ export default function Payments() {
                     <td>{formatDate(payment.paid_at || payment.created_at)}</td>
                     <td>
                       <div className="d-flex flex-wrap gap-2">
+                        <Link to={`/accountant/payments/${payment.id}`} className="btn btn-outline-dark btn-sm">
+                          Mở trang chi tiết
+                        </Link>
                         <button
                           type="button"
                           className="btn btn-outline-secondary btn-sm"

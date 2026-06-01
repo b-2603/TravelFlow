@@ -80,6 +80,7 @@ export const tourAPI = {
   detail: (slug) => api.get(`/tours/${slug}`),
   managerList: (params) => api.get('/manager/tours', { params }),
   managerMeta: () => api.get('/manager/meta'),
+  managerDetail: (id) => api.get(`/manager/tours/${id}`),
   submitForApproval: (id) => api.post(`/manager/tours/${id}/submit`),
   togglePin: (id) => api.post(`/manager/tours/${id}/toggle-pin`),
   duplicate: (id) => api.post(`/manager/tours/${id}/duplicate`),

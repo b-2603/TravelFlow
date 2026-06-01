@@ -10,6 +10,7 @@ use App\Http\Resources\TourResource;
 use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\Partner;
+use App\Models\Review;
 use App\Models\Tour;
 use App\Models\User;
 use App\Services\TourDepartureService;
@@ -237,6 +238,88 @@ class TourController extends Controller
                 'service_type' => $partner->service_type,
             ])->values(),
         ], 'Manager meta retrieved successfully.');
+    }
+
+    public function managerShow(Request $request, string $id)
+    {
+        $tour = Tour::query()
+            ->where('_id', $id)
+            ->whereNull('deleted_at')
+            ->with(['creator', 'guide'])
+            ->first();
+
+        if (! $tour) {
+            return $this->apiResponse(false, null, 'Tour not found.', 404);
+        }
+
+        if ($request->user()->role !== 'admin' && (string) $tour->created_by !== (string) $request->user()->_id) {
+            return $this->apiResponse(false, null, 'Forbidden.', 403);
+        }
+
+        $bookings = Booking::where('tour_id', $tour->_id)->get();
+        $reviews = Review::where('tour_id', $tour->_id)->get();
+        $departures = collect($tour->departures ?? []);
+        $bookedPax = $bookings->whereIn('status', ['pending', 'confirmed', 'completed'])->sum('num_pax');
+        $availableSlots = $departures->sum(fn ($departure) => (int) ($departure['available_slots'] ?? 0));
+        $capacity = $bookedPax + $availableSlots;
+        $fillRate = $capacity > 0 ? round(($bookedPax / $capacity) * 100, 2) : 0;
+        $reviewCount = $reviews->count();
+        $averageRating = $reviewCount > 0 ? round($reviews->avg('rating'), 2) : 0;
+
+        return $this->apiResponse(true, [
+            'tour' => new TourResource($tour),
+            'stats' => [
+                'bookings_total' => $bookings->count(),
+                'bookings_pending' => $bookings->where('status', 'pending')->count(),
+                'bookings_confirmed' => $bookings->where('status', 'confirmed')->count(),
+                'bookings_completed' => $bookings->where('status', 'completed')->count(),
+                'booked_pax' => (int) $bookedPax,
+                'available_slots' => (int) $availableSlots,
+                'fill_rate' => $fillRate,
+                'review_count' => $reviewCount,
+                'average_rating' => $averageRating,
+            ],
+            'recent_bookings' => $bookings
+                ->sortByDesc(fn ($booking) => $booking->created_at ?? null)
+                ->take(8)
+                ->values()
+                ->map(function ($booking) {
+                    return [
+                        'id' => (string) $booking->_id,
+                        'booking_code' => $booking->booking_code,
+                        'status' => $booking->status,
+                        'departure_date' => $booking->departure_date,
+                        'num_pax' => (int) ($booking->num_pax ?? 0),
+                        'total_price' => (float) ($booking->total_price ?? 0),
+                        'user' => $booking->user ? [
+                            'id' => (string) $booking->user->_id,
+                            'name' => $booking->user->name,
+                            'email' => $booking->user->email,
+                        ] : null,
+                        'created_at' => optional($booking->created_at)->toISOString(),
+                    ];
+                })
+                ->all(),
+            'recent_reviews' => $reviews
+                ->sortByDesc(fn ($review) => $review->created_at ?? null)
+                ->take(6)
+                ->values()
+                ->map(function ($review) {
+                    return [
+                        'id' => (string) $review->_id,
+                        'title' => $review->title,
+                        'rating' => (int) ($review->rating ?? 0),
+                        'comment' => $review->comment,
+                        'status' => $review->status,
+                        'user' => $review->user ? [
+                            'id' => (string) $review->user->_id,
+                            'name' => $review->user->name,
+                        ] : null,
+                        'created_at' => optional($review->created_at)->toISOString(),
+                    ];
+                })
+                ->all(),
+        ], 'Manager tour retrieved successfully.');
     }
 
     public function submitForApproval(Request $request, string $id)

@@ -14,6 +14,7 @@ const UserManagement = lazy(() => import('./pages/Admin/UserManagement'));
 const AgentDashboard = lazy(() => import('./pages/Agent/Dashboard'));
 const AgentBookings = lazy(() => import('./pages/Agent/Bookings'));
 const AgentCustomers = lazy(() => import('./pages/Agent/Customers'));
+const AgentCustomerDetail = lazy(() => import('./pages/Agent/CustomerDetail'));
 const AgentCreateBooking = lazy(() => import('./pages/Agent/CreateBooking'));
 const AgentSupportTickets = lazy(() => import('./pages/Agent/SupportTickets'));
 const AgentCustomTours = lazy(() => import('./pages/Agent/CustomTours'));
@@ -21,8 +22,10 @@ const GuideDashboard = lazy(() => import('./pages/Guide/Dashboard'));
 const GuideNotifications = lazy(() => import('./pages/Guide/Notifications'));
 const GuideHistory = lazy(() => import('./pages/Guide/History'));
 const AssignmentDetail = lazy(() => import('./pages/Guide/AssignmentDetail'));
+const AssignmentSummary = lazy(() => import('./pages/Guide/AssignmentSummary'));
 const Payments = lazy(() => import('./pages/Accountant/Payments'));
 const AccountantDashboard = lazy(() => import('./pages/Accountant/Dashboard'));
+const PaymentDetailAccountant = lazy(() => import('./pages/Accountant/PaymentDetail'));
 const Refunds = lazy(() => import('./pages/Accountant/Refunds'));
 const AccountantLogs = lazy(() => import('./pages/Accountant/Logs'));
 const Reports = lazy(() => import('./pages/Accountant/Reports'));
@@ -38,6 +41,7 @@ const Assignments = lazy(() => import('./pages/Guide/Assignments'));
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const TourForm = lazy(() => import('./pages/Manager/TourForm'));
+const TourDetailManager = lazy(() => import('./pages/Manager/TourDetail'));
 const TourListManager = lazy(() => import('./pages/Manager/TourListManager'));
 const MyBookings = lazy(() => import('./pages/MyBookings'));
 const MySupport = lazy(() => import('./pages/MySupport'));
@@ -102,6 +106,7 @@ export default function App() {
 
             <Route element={<ProtectedRoute allowedRoles={['tour_manager', 'admin']} />}>
               <Route path="/manager/tours" element={<TourListManager />} />
+              <Route path="/manager/tours/:id" element={<TourDetailManager />} />
               <Route path="/manager/tours/create" element={<TourForm />} />
               <Route path="/manager/tours/:id/edit" element={<TourForm />} />
             </Route>
@@ -109,6 +114,7 @@ export default function App() {
             <Route element={<ProtectedRoute allowedRoles={['agent']} />}>
               <Route path="/agent/dashboard" element={<AgentDashboard />} />
               <Route path="/agent/customers" element={<AgentCustomers />} />
+              <Route path="/agent/customers/:id" element={<AgentCustomerDetail />} />
               <Route path="/agent/bookings" element={<AgentBookings />} />
               <Route path="/agent/create-booking" element={<AgentCreateBooking />} />
               <Route path="/agent/support-tickets" element={<AgentSupportTickets />} />
@@ -120,6 +126,7 @@ export default function App() {
               <Route path="/guide/assignments" element={<Assignments />} />
               <Route path="/guide/assignments/:tourId" element={<AssignmentDetail />} />
               <Route path="/guide/assignments/:tourId/:departureDate" element={<AssignmentDetail />} />
+              <Route path="/guide/assignments/:tourId/:departureDate/summary" element={<AssignmentSummary />} />
               <Route path="/guide/notifications" element={<GuideNotifications />} />
               <Route path="/guide/history" element={<GuideHistory />} />
             </Route>
@@ -132,6 +139,7 @@ export default function App() {
             <Route element={<ProtectedRoute allowedRoles={['accountant']} />}>
               <Route path="/accountant/dashboard" element={<AccountantDashboard />} />
               <Route path="/accountant/payments" element={<Payments />} />
+              <Route path="/accountant/payments/:id" element={<PaymentDetailAccountant />} />
               <Route path="/accountant/refunds" element={<Refunds />} />
               <Route path="/accountant/logs" element={<AccountantLogs />} />
               <Route path="/accountant/reports" element={<Reports />} />

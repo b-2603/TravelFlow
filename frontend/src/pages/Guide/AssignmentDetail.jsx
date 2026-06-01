@@ -179,6 +179,14 @@ export default function AssignmentDetail() {
           <Link className="btn btn-outline-primary btn-sm" to="/guide/assignments">
             Quay lại phân công
           </Link>
+          {assignment ? (
+            <Link
+              className="btn btn-outline-dark btn-sm"
+              to={`/guide/assignments/${assignment.tour_id}/${activeDepartureDate}/summary`}
+            >
+              Bản tổng hợp
+            </Link>
+          ) : null}
         </div>
 
         {isLoading ? (

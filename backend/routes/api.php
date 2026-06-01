@@ -91,6 +91,7 @@ Route::middleware('jwt')->group(function () {
     Route::middleware('role:tour_manager|admin')->group(function () {
         Route::get('/manager/tours', [TourController::class, 'managerIndex']);
         Route::get('/manager/meta', [TourController::class, 'managerMeta']);
+        Route::get('/manager/tours/{id}', [TourController::class, 'managerShow']);
         Route::post('/manager/tours/{id}/submit', [TourController::class, 'submitForApproval']);
         Route::post('/manager/tours/{id}/toggle-pin', [TourController::class, 'togglePinned']);
         Route::post('/manager/tours/{id}/duplicate', [TourController::class, 'duplicate']);

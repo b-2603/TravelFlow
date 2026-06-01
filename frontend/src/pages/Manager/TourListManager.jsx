@@ -153,6 +153,9 @@ export default function TourListManager() {
                 <td>{formatDate(tour.created_at)}</td>
                 <td>
                   <div className="d-flex flex-wrap gap-2">
+                    <Link to={`/manager/tours/${tour.id}`} className="btn btn-outline-dark btn-sm">
+                      Chi tiết
+                    </Link>
                     <Link to={`/manager/tours/${tour.id}/edit`} className="btn btn-outline-primary btn-sm">
                       Sửa
                     </Link>

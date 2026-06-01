@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import FavoriteButton from '../components/FavoriteButton';
 import DateInput from '../components/DateInput';
@@ -20,26 +20,28 @@ const slides = [
   },
 ];
 
-const destinations = [
+const destinationSeeds = [
   {
     name: 'Đà Nẵng',
     caption: 'Biển, thành phố và nhịp sống hiện đại.',
-    image: 'https://images.unsplash.com/photo-1559592481-74153c49ca83?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+    objectPosition: 'center center',
   },
   {
     name: 'Phú Quốc',
     caption: 'Hoàng hôn vàng, resort và các chuyến nghỉ dưỡng sang.',
-    image: 'https://images.unsplash.com/photo-1589779137213-95ece3820a2d?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80',
+    objectPosition: 'center 35%',
   },
   {
     name: 'Đà Lạt',
     caption: 'Sáng lạnh, thông xanh và quán cà phê trên đồi.',
-    image: 'https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
   },
   {
     name: 'Hạ Long',
     caption: 'Du thuyền, vịnh xanh và những khối đá kỳ vĩ.',
-    image: 'https://images.unsplash.com/photo-1506973035872-a4db5eb0d8c2?auto=format&fit=crop&w=1200&q=80',
+    image: 'https://images.unsplash.com/photo-1533683274476-13a1d1ff7bf4?auto=format&fit=crop&w=1200&q=80',
   },
 ];
 
@@ -126,6 +128,24 @@ export default function Home() {
   const [filters, setFilters] = useState({ destination: '', date: '', pax: 2 });
   const { data: toursPayload = { items: [], pagination: null }, isLoading, isError } = useTours({});
   const featuredTours = (toursPayload?.items || []).slice(0, 6);
+  const destinations = useMemo(() => {
+    const tours = toursPayload?.items || [];
+
+    return destinationSeeds.map((destination) => {
+      const normalizedName = destination.name.toLowerCase();
+      const matchedTour = tours.find((tour) => {
+        const haystack = `${tour.destination || ''} ${tour.title || ''}`.toLowerCase();
+        return haystack.includes(normalizedName);
+      });
+
+      return {
+        ...destination,
+        image: matchedTour?.images?.[0] || destination.image || 'https://picsum.photos/seed/travelflow-destination/1200/900',
+        objectPosition: destination.objectPosition || 'center center',
+        tourSlug: matchedTour?.slug || null,
+      };
+    });
+  }, [featuredTours, toursPayload?.items]);
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -274,17 +294,30 @@ export default function Home() {
             <div className="col-sm-6 col-xl-3" key={destination.name}>
               <article className="tf-destination-card h-100">
                 <div className="tf-card-media position-relative" style={{ height: '20rem' }}>
-                  <img src={destination.image} alt={destination.name} />
+                  <img
+                    src={destination.image}
+                    alt={destination.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: destination.objectPosition,
+                      display: 'block',
+                    }}
+                  />
                   <div className="tf-card-overlay" />
                   <button type="button" className="tf-heart-btn" aria-label={`Yêu thích ${destination.name}`}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 21s-7.2-4.35-9.2-8.72C1.28 8.91 3.2 5 7.2 5c2.1 0 3.6 1.15 4.8 2.63C13.2 6.15 14.7 5 16.8 5c4 0 5.92 3.91 4.4 7.28C19.2 16.65 12 21 12 21Z" />
                     </svg>
                   </button>
-                  <div className="position-absolute bottom-0 start-0 w-100 p-4 text-white">
+                  <Link
+                    to={destination.tourSlug ? `/tours/${destination.tourSlug}` : '/tours'}
+                    className="position-absolute bottom-0 start-0 w-100 p-4 text-white text-decoration-none"
+                  >
                     <h3 className="h4 fw-bold mb-1">{destination.name}</h3>
                     <p className="mb-0 text-white-50">{destination.caption}</p>
-                  </div>
+                  </Link>
                 </div>
               </article>
             </div>

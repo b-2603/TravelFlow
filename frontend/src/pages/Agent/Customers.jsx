@@ -78,6 +78,9 @@ export default function AgentCustomers() {
                     >
                       Chi tiết
                     </button>
+                    <Link to={`/agent/customers/${customerItem.id}`} className="btn btn-outline-dark btn-sm">
+                      Trang chi tiết
+                    </Link>
                     <Link to="/agent/create-booking" state={{ customerId: customerItem.id }} className="btn btn-outline-primary btn-sm">
                       Tạo booking
                     </Link>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 import { guideAPI } from '../../services/api';
 import { formatDate, statusBadgeClass } from '../../utils/formatters';
 
@@ -254,6 +255,12 @@ export default function Assignments() {
                         className="btn btn-outline-secondary btn-sm"
                       >
                         Xem chi tiết
+                      </Link>
+                      <Link
+                        to={`/guide/assignments/${assignment.tour_id}/${assignment.departure?.date}/summary`}
+                        className="btn btn-outline-dark btn-sm"
+                      >
+                        Bản tổng hợp
                       </Link>
                       <button
                         type="button"
