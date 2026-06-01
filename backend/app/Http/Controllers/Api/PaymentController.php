@@ -661,10 +661,7 @@ class PaymentController extends Controller
                     'isHtml5ParserEnabled' => true,
                 ]);
 
-                return response($pdf->output(), 200, [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-                ]);
+                return $pdf->download($filename);
             } catch (\Throwable $exception) {
                 Log::error('Failed to generate finance report PDF.', [
                     'exception' => $exception,
