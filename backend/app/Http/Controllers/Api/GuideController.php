@@ -41,6 +41,13 @@ class GuideController extends Controller
             || collect($tour->departures ?? [])->contains(fn ($departure) => (string) ($departure['assigned_guide_id'] ?? '') === $guideId);
     }
 
+    private function findTourById(string $tourId): ?Tour
+    {
+        return Tour::where('_id', $tourId)
+            ->whereNull('deleted_at')
+            ->first();
+    }
+
     /**
      * Dashboard của hướng dẫn viên
      * Hiển thị thống kê và thông tin tổng quan
@@ -394,7 +401,7 @@ class GuideController extends Controller
     {
         $guideId = (string) $request->user()->_id;
 
-        $tour = Tour::find($tourId);
+        $tour = $this->findTourById($tourId);
         if (! $tour) {
             return $this->apiResponse(false, null, 'Không tìm thấy tour.', 404);
         }
@@ -445,7 +452,7 @@ class GuideController extends Controller
     {
         $guideId = (string) $request->user()->_id;
 
-        $tour = Tour::find($tourId);
+        $tour = $this->findTourById($tourId);
         if (! $tour) {
             return $this->apiResponse(false, null, 'Không tìm thấy tour.', 404);
         }
@@ -489,7 +496,7 @@ class GuideController extends Controller
      */
     public function updateStatus(GuideStatusUpdateRequest $request, string $id)
     {
-        $tour = Tour::find($id);
+        $tour = $this->findTourById($id);
 
         if (! $tour) {
             return $this->apiResponse(false, null, 'Không tìm thấy tour được phân công.', 404);
@@ -583,7 +590,7 @@ class GuideController extends Controller
             'location' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $tour = Tour::find($tourId);
+        $tour = $this->findTourById($tourId);
         if (! $tour) {
             return $this->apiResponse(false, null, 'Không tìm thấy tour.', 404);
         }
@@ -615,7 +622,7 @@ class GuideController extends Controller
             'location' => $validated['location'] ?? null,
             'attendance' => collect($validated['attendance'])
                 ->map(fn ($item) => [
-                    'name' => $item['passenger_name'],
+                    'name' => $item['name'],
                     'present' => (bool) $item['present'],
                     'note' => $item['note'] ?? null,
                 ])
@@ -689,7 +696,7 @@ class GuideController extends Controller
             'images.*' => ['string', 'max:500'],
         ]);
 
-        $tour = Tour::find($tourId);
+        $tour = $this->findTourById($tourId);
         if (! $tour) {
             return $this->apiResponse(false, null, 'Không tìm thấy tour.', 404);
         }
@@ -768,7 +775,7 @@ class GuideController extends Controller
             'highlights.*' => ['string', 'max:500'],
         ]);
 
-        $tour = Tour::find($tourId);
+        $tour = $this->findTourById($tourId);
         if (! $tour) {
             return $this->apiResponse(false, null, 'Không tìm thấy tour.', 404);
         }
@@ -836,7 +843,7 @@ class GuideController extends Controller
     {
         $guideId = (string) $request->user()->_id;
 
-        $tour = Tour::find($tourId);
+        $tour = $this->findTourById($tourId);
         if (! $tour) {
             return $this->apiResponse(false, null, 'Không tìm thấy tour.', 404);
         }
