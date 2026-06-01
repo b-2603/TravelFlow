@@ -837,16 +837,27 @@ class AgentController extends Controller
         // Thống kê theo trạng thái
         $statusBreakdown = $periodBookingsList->groupBy('status')->map->count();
         $paymentBreakdown = $periodBookingsList->groupBy('payment_status')->map->count();
+        $allStatusBreakdown = $allBookingsList->groupBy('status')->map->count();
+        $allPaymentBreakdown = $allBookingsList->groupBy('payment_status')->map->count();
+
+        $partialPaymentCount = function ($breakdown) {
+            return ($breakdown->get('partial', 0) + $breakdown->get('partially_paid', 0));
+        };
+
+        $buildTrend = function ($bookings) {
+            return $bookings->groupBy(function ($booking) {
+                return Carbon::parse($booking->created_at)->format('Y-m-d');
+            })->map(function ($items) {
+                return [
+                    'count' => $items->count(),
+                    'revenue' => (float) $items->where('payment_status', 'paid')->sum('total_price'),
+                ];
+            })->sortKeysDesc()->take(12);
+        };
 
         // Xu hướng theo ngày trong period
-        $dailyTrend = $periodBookingsList->groupBy(function ($booking) {
-            return Carbon::parse($booking->created_at)->format('Y-m-d');
-        })->map(function ($bookings) {
-            return [
-                'count' => $bookings->count(),
-                'revenue' => (float) $bookings->where('payment_status', 'paid')->sum('total_price'),
-            ];
-        });
+        $dailyTrend = $buildTrend($periodBookingsList);
+        $allTimeTrend = $buildTrend($allBookingsList);
 
         return $this->apiResponse(true, [
             'period' => [
@@ -863,15 +874,23 @@ class AgentController extends Controller
                 'pending' => $statusBreakdown->get('pending', 0),
                 'paid_bookings' => $paymentBreakdown->get('paid', 0),
                 'unpaid_bookings' => $paymentBreakdown->get('unpaid', 0),
-                'partially_paid' => $paymentBreakdown->get('partially_paid', 0),
+                'partially_paid' => $partialPaymentCount($paymentBreakdown),
             ],
             'all_time' => [
                 'total_bookings' => $allBookingsList->count(),
                 'revenue' => $allRevenue,
+                'confirmed' => $allStatusBreakdown->get('confirmed', 0),
+                'completed' => $allStatusBreakdown->get('completed', 0),
+                'cancelled' => $allStatusBreakdown->get('cancelled', 0),
+                'pending' => $allStatusBreakdown->get('pending', 0),
+                'paid_bookings' => $allPaymentBreakdown->get('paid', 0),
+                'unpaid_bookings' => $allPaymentBreakdown->get('unpaid', 0),
+                'partially_paid' => $partialPaymentCount($allPaymentBreakdown),
                 'cancel_rate' => round(($allBookingsList->where('status', 'cancelled')->count() / max(1, $allBookingsList->count())) * 100, 2),
                 'close_rate' => round((($allBookingsList->where('status', 'confirmed')->count() + $allBookingsList->where('status', 'completed')->count()) / max(1, $allBookingsList->count())) * 100, 2),
             ],
             'daily_trend' => $dailyTrend,
+            'all_time_trend' => $allTimeTrend,
         ], 'Lấy thống kê KPI thành công.');
     }
 }

@@ -20,11 +20,16 @@ export default function AgentDashboard() {
   const stats = payload?.stats || {};
   const recentBookings = payload?.recent_bookings || [];
   const tours = payload?.available_tours || [];
-  const kpi = statsPayload?.current_period || {};
+  const currentKpi = statsPayload?.current_period || {};
+  const allTimeKpi = statsPayload?.all_time || {};
+  const hasCurrentKpi = (currentKpi.total_bookings ?? 0) > 0;
+  const kpi = hasCurrentKpi ? currentKpi : allTimeKpi;
   const trendRaw = statsPayload?.daily_trend || [];
-  const trend = Array.isArray(trendRaw)
-    ? trendRaw
-    : Object.entries(trendRaw).map(([date, item]) => ({ date, ...(item || {}) }));
+  const fallbackTrendRaw = statsPayload?.all_time_trend || [];
+  const activeTrendRaw = hasCurrentKpi ? trendRaw : fallbackTrendRaw;
+  const trend = Array.isArray(activeTrendRaw)
+    ? activeTrendRaw
+    : Object.entries(activeTrendRaw).map(([date, item]) => ({ date, ...(item || {}) }));
 
   return (
     <div className="d-grid gap-4">
@@ -52,6 +57,9 @@ export default function AgentDashboard() {
           <div>
             <h2 className="h5 mb-1">KPI cá nhân</h2>
             <p className="mb-0 text-muted">Theo dõi theo ngày, tuần, tháng hoặc năm để kiểm soát hiệu suất tư vấn.</p>
+            {!hasCurrentKpi && (allTimeKpi.total_bookings ?? 0) > 0 ? (
+              <div className="small text-primary mt-2">Kỳ đang chọn chưa có booking, đang hiển thị dữ liệu tổng phụ trách.</div>
+            ) : null}
           </div>
           <select className="form-select" style={{ width: 180 }} value={period} onChange={(e) => setPeriod(e.target.value)}>
             <option value="day">Hôm nay</option>
