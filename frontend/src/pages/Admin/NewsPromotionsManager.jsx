@@ -32,11 +32,36 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+const DETAIL_SUGGESTIONS = {
+  keyHighlights: ['Giảm giá theo chương trình', 'Số lượng ưu đãi có hạn', 'Áp dụng trong thời gian khuyến mãi', 'Có thể đặt online', 'Hỗ trợ tư vấn nhanh'],
+  benefits: ['Tiết kiệm chi phí', 'Lịch trình được tối ưu', 'Hỗ trợ trước và trong chuyến đi', 'Phù hợp đặt theo nhóm', 'Nhiều lựa chọn thanh toán'],
+  conditions: ['Áp dụng cho booking mới', 'Không áp dụng đồng thời ưu đãi khác', 'Cần đặt cọc để giữ chỗ', 'Ưu đãi tùy tình trạng chỗ', 'Không quy đổi thành tiền mặt'],
+  targetAudience: ['Gia đình', 'Nhóm bạn', 'Cặp đôi', 'Khách công ty', 'Khách đi lần đầu'],
+  applicableTours: ['Tour trong nước', 'Tour nước ngoài', 'Tour hè', 'Tour nghỉ dưỡng', 'Tour cuối tuần'],
+  bookingChannels: ['Website', 'Hotline', 'Văn phòng', 'Fanpage', 'Email'],
+};
+
 function normalizeList(items) {
-  return Array.isArray(items) ? items.filter(Boolean) : [];
+  return Array.isArray(items) ? items : [];
 }
 
-function TextListEditor({ label, items, onChange, placeholder = 'Nhập nội dung' }) {
+function compactTextList(items) {
+  return Array.isArray(items) ? items.map((item) => String(item || '').trim()).filter(Boolean) : [];
+}
+
+function compactObjectList(items, keys) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) =>
+      keys.reduce((result, key) => {
+        result[key] = String(item?.[key] || '').trim();
+        return result;
+      }, {})
+    )
+    .filter((item) => keys.some((key) => item[key]));
+}
+
+function TextListEditor({ label, items, onChange, placeholder = 'Nhập nội dung', suggestions = [] }) {
   const list = normalizeList(items);
 
   const updateItem = (index, value) => {
@@ -45,11 +70,30 @@ function TextListEditor({ label, items, onChange, placeholder = 'Nhập nội du
     onChange(next);
   };
 
+  const addSuggestion = (suggestion) => {
+    if (list.includes(suggestion)) return;
+    onChange([...list, suggestion]);
+  };
+
   return (
     <div>
       <label className="form-label fw-semibold">{label}</label>
       <div className="d-grid gap-2">
         {list.length === 0 ? <div className="small text-muted">Chưa có mục nào.</div> : null}
+        {suggestions.length ? (
+          <div className="d-flex flex-wrap gap-2">
+            {suggestions.map((suggestion) => (
+              <button
+                type="button"
+                className="btn btn-sm btn-light border rounded-pill"
+                key={`${label}-${suggestion}`}
+                onClick={() => addSuggestion(suggestion)}
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        ) : null}
         {list.map((item, index) => (
           <div className="d-flex gap-2" key={`${label}-${index}`}>
             <input className="form-control rounded-pill" value={item} placeholder={placeholder} onChange={(e) => updateItem(index, e.target.value)} />
@@ -80,6 +124,22 @@ function SectionEditor({ items, onChange }) {
       <label className="form-label fw-semibold">Mục chi tiết</label>
       <div className="d-grid gap-3">
         {list.length === 0 ? <div className="small text-muted">Chưa có mục chi tiết.</div> : null}
+        <div className="d-flex flex-wrap gap-2">
+          {[
+            { title: 'Chi tiết chương trình', content: 'Mô tả nội dung chính của tin tức hoặc ưu đãi.' },
+            { title: 'Cách nhận ưu đãi', content: 'Khách chọn tour, đặt lịch và xác nhận với bộ phận tư vấn.' },
+            { title: 'Thời gian áp dụng', content: 'Ưu đãi áp dụng theo thời gian đã thiết lập ở trên.' },
+          ].map((preset) => (
+            <button
+              type="button"
+              className="btn btn-sm btn-light border rounded-pill"
+              key={preset.title}
+              onClick={() => onChange([...list, preset])}
+            >
+              {preset.title}
+            </button>
+          ))}
+        </div>
         {list.map((item, index) => (
           <div className="rounded-4 border bg-white p-3" key={`section-${index}`}>
             <input className="form-control rounded-pill mb-2" value={item.title || ''} placeholder="Tiêu đề mục" onChange={(e) => updateItem(index, 'title', e.target.value)} />
@@ -111,6 +171,22 @@ function FaqEditor({ items, onChange }) {
       <label className="form-label fw-semibold">Câu hỏi thường gặp</label>
       <div className="d-grid gap-3">
         {list.length === 0 ? <div className="small text-muted">Chưa có câu hỏi.</div> : null}
+        <div className="d-flex flex-wrap gap-2">
+          {[
+            { question: 'Ưu đãi này áp dụng đến khi nào?', answer: 'Vui lòng xem thời gian hiệu lực của chương trình.' },
+            { question: 'Có thể áp dụng chung với ưu đãi khác không?', answer: 'Chương trình không áp dụng đồng thời với ưu đãi khác trừ khi có thông báo riêng.' },
+            { question: 'Tôi cần liên hệ ở đâu để được tư vấn?', answer: 'Khách hàng có thể liên hệ hotline hoặc email trong phần thông tin liên hệ.' },
+          ].map((preset) => (
+            <button
+              type="button"
+              className="btn btn-sm btn-light border rounded-pill"
+              key={preset.question}
+              onClick={() => onChange([...list, preset])}
+            >
+              {preset.question}
+            </button>
+          ))}
+        </div>
         {list.map((item, index) => (
           <div className="rounded-4 border bg-white p-3" key={`faq-${index}`}>
             <input className="form-control rounded-pill mb-2" value={item.question || ''} placeholder="Câu hỏi" onChange={(e) => updateItem(index, 'question', e.target.value)} />
@@ -142,6 +218,22 @@ function LinkEditor({ items, onChange }) {
       <label className="form-label fw-semibold">Liên kết liên quan</label>
       <div className="d-grid gap-2">
         {list.length === 0 ? <div className="small text-muted">Chưa có liên kết.</div> : null}
+        <div className="d-flex flex-wrap gap-2">
+          {[
+            { label: 'Xem danh sách tour', url: '/tours' },
+            { label: 'Liên hệ tư vấn', url: '/contact' },
+            { label: 'Tin tức & ưu đãi', url: '/news-promotions' },
+          ].map((preset) => (
+            <button
+              type="button"
+              className="btn btn-sm btn-light border rounded-pill"
+              key={preset.label}
+              onClick={() => onChange([...list, preset])}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
         {list.map((item, index) => (
           <div className="row g-2" key={`link-${index}`}>
             <div className="col-md-5">
@@ -241,16 +333,16 @@ export default function NewsPromotionsManager() {
     payload.append('status', form.status);
     payload.append('valid_from', form.validFrom || '');
     payload.append('valid_until', form.validUntil || '');
-    payload.append('detail_sections', JSON.stringify(form.detailSections || []));
-    payload.append('key_highlights', JSON.stringify(form.keyHighlights || []));
-    payload.append('benefits', JSON.stringify(form.benefits || []));
-    payload.append('conditions', JSON.stringify(form.conditions || []));
-    payload.append('target_audience', JSON.stringify(form.targetAudience || []));
-    payload.append('applicable_tours', JSON.stringify(form.applicableTours || []));
-    payload.append('booking_channels', JSON.stringify(form.bookingChannels || []));
-    payload.append('faq', JSON.stringify(form.faq || []));
+    payload.append('detail_sections', JSON.stringify(compactObjectList(form.detailSections, ['title', 'content'])));
+    payload.append('key_highlights', JSON.stringify(compactTextList(form.keyHighlights)));
+    payload.append('benefits', JSON.stringify(compactTextList(form.benefits)));
+    payload.append('conditions', JSON.stringify(compactTextList(form.conditions)));
+    payload.append('target_audience', JSON.stringify(compactTextList(form.targetAudience)));
+    payload.append('applicable_tours', JSON.stringify(compactTextList(form.applicableTours)));
+    payload.append('booking_channels', JSON.stringify(compactTextList(form.bookingChannels)));
+    payload.append('faq', JSON.stringify(compactObjectList(form.faq, ['question', 'answer'])));
     payload.append('contact_info', JSON.stringify(form.contactInfo || {}));
-    payload.append('related_links', JSON.stringify(form.relatedLinks || []));
+    payload.append('related_links', JSON.stringify(compactObjectList(form.relatedLinks, ['label', 'url'])));
     if (form.coverFile) payload.append('cover_image_file', form.coverFile);
     if (!form.coverFile && form.coverImage) payload.append('cover_image', form.coverImage);
 
@@ -426,6 +518,7 @@ export default function NewsPromotionsManager() {
                         label="Điểm nổi bật"
                         items={form.keyHighlights}
                         placeholder="Ví dụ: Giảm 15% cho tour hè"
+                        suggestions={DETAIL_SUGGESTIONS.keyHighlights}
                         onChange={(keyHighlights) => setForm((c) => ({ ...c, keyHighlights }))}
                       />
                     </div>
@@ -434,6 +527,7 @@ export default function NewsPromotionsManager() {
                         label="Lợi ích"
                         items={form.benefits}
                         placeholder="Ví dụ: Tặng bữa tối đặc sản"
+                        suggestions={DETAIL_SUGGESTIONS.benefits}
                         onChange={(benefits) => setForm((c) => ({ ...c, benefits }))}
                       />
                     </div>
@@ -442,6 +536,7 @@ export default function NewsPromotionsManager() {
                         label="Điều kiện áp dụng"
                         items={form.conditions}
                         placeholder="Ví dụ: Áp dụng cho booking từ 2 khách"
+                        suggestions={DETAIL_SUGGESTIONS.conditions}
                         onChange={(conditions) => setForm((c) => ({ ...c, conditions }))}
                       />
                     </div>
@@ -453,6 +548,7 @@ export default function NewsPromotionsManager() {
                         label="Đối tượng áp dụng"
                         items={form.targetAudience}
                         placeholder="Ví dụ: Gia đình, nhóm bạn"
+                        suggestions={DETAIL_SUGGESTIONS.targetAudience}
                         onChange={(targetAudience) => setForm((c) => ({ ...c, targetAudience }))}
                       />
                     </div>
@@ -461,6 +557,7 @@ export default function NewsPromotionsManager() {
                         label="Tour áp dụng"
                         items={form.applicableTours}
                         placeholder="Ví dụ: Đà Nẵng 3N2Đ"
+                        suggestions={DETAIL_SUGGESTIONS.applicableTours}
                         onChange={(applicableTours) => setForm((c) => ({ ...c, applicableTours }))}
                       />
                     </div>
@@ -469,6 +566,7 @@ export default function NewsPromotionsManager() {
                         label="Kênh đặt"
                         items={form.bookingChannels}
                         placeholder="Ví dụ: Website, hotline, văn phòng"
+                        suggestions={DETAIL_SUGGESTIONS.bookingChannels}
                         onChange={(bookingChannels) => setForm((c) => ({ ...c, bookingChannels }))}
                       />
                     </div>
