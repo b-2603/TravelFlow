@@ -363,54 +363,56 @@ class AdminController extends Controller
 
     public function guideAssignments()
     {
-        $bookingGroups = Booking::with(['tour', 'user'])
-            ->whereIn('status', ['pending', 'confirmed'])
+        $tours = Tour::query()
+            ->with(['bookings.user', 'guide'])
+            ->whereNull('deleted_at')
+            ->where('status', 'approved')
             ->orderByDesc('created_at')
-            ->get()
-            ->filter(fn ($booking) => $booking->tour && $booking->tour->status === 'approved')
-            ->groupBy(fn ($booking) => (string) $booking->tour_id.'|'.optional($booking->departure_date)->toDateString());
+            ->get();
 
-        $items = $bookingGroups->map(function ($groupedBookings, $groupKey) {
-            [$tourId, $departureDate] = explode('|', $groupKey);
-            $tour = optional($groupedBookings->first())->tour;
+        $items = $tours->flatMap(function (Tour $tour) {
+            $bookings = collect($tour->bookings ?? []);
 
-            if (! $tour) {
-                return null;
-            }
+            return collect($tour->departures ?? [])
+                ->map(function ($departure) use ($tour, $bookings) {
+                    $departureDate = $departure['date'] ?? null;
+                    $guideId = (string) ($departure['assigned_guide_id'] ?? $tour->assigned_guide_id ?? '');
+                    $guide = $guideId ? User::find($guideId) : null;
 
-            $departure = collect($tour->departures ?? [])->firstWhere('date', $departureDate) ?? [];
-            $guideId = (string) ($departure['assigned_guide_id'] ?? $tour->assigned_guide_id ?? '');
-            $guide = $guideId ? User::find($guideId) : null;
+                    $groupedBookings = $departureDate
+                        ? $bookings->filter(fn ($booking) => optional($booking->departure_date)->toDateString() === $departureDate)
+                        : $bookings;
 
-            return [
-                'assignment_key' => $groupKey,
-                'tour_id' => (string) $tour->_id,
-                'tour_title' => $tour->title,
-                'tour_slug' => $tour->slug,
-                'destination' => $tour->destination,
-                'category' => $tour->category,
-                'departure_date' => $departureDate,
-                'departure_status' => $departure['status'] ?? 'active',
-                'bookings_count' => $groupedBookings->count(),
-                'passenger_count' => (int) $groupedBookings->sum('num_pax'),
-                'assignment_status' => $guide ? 'assigned' : 'unassigned',
-                'guide' => $guide ? [
-                    'id' => (string) $guide->_id,
-                    'name' => $guide->name,
-                    'email' => $guide->email,
-                ] : null,
-                'customers' => $groupedBookings->map(function ($booking) {
                     return [
-                        'booking_id' => (string) $booking->_id,
-                        'name' => $booking->user?->name,
-                        'email' => $booking->user?->email,
-                        'phone' => $booking->user?->phone,
-                        'num_pax' => (int) $booking->num_pax,
-                        'status' => $booking->status,
+                        'assignment_key' => (string) $tour->_id.'|'.($departureDate ?? 'tour'),
+                        'tour_id' => (string) $tour->_id,
+                        'tour_title' => $tour->title,
+                        'tour_slug' => $tour->slug,
+                        'destination' => $tour->destination,
+                        'category' => $tour->category,
+                        'departure_date' => $departureDate,
+                        'departure_status' => $departure['status'] ?? 'active',
+                        'bookings_count' => $groupedBookings->count(),
+                        'passenger_count' => (int) $groupedBookings->sum('num_pax'),
+                        'assignment_status' => $guide ? 'assigned' : 'unassigned',
+                        'guide' => $guide ? [
+                            'id' => (string) $guide->_id,
+                            'name' => $guide->name,
+                            'email' => $guide->email,
+                        ] : null,
+                        'customers' => $groupedBookings->map(function ($booking) {
+                            return [
+                                'booking_id' => (string) $booking->_id,
+                                'name' => $booking->user?->name,
+                                'email' => $booking->user?->email,
+                                'phone' => $booking->user?->phone,
+                                'num_pax' => (int) $booking->num_pax,
+                                'status' => $booking->status,
+                            ];
+                        })->values()->all(),
                     ];
-                })->values()->all(),
-            ];
-        })->filter()->sortBy([
+                });
+        })->values()->sortBy([
             ['departure_date', 'asc'],
             ['tour_title', 'asc'],
         ])->values();

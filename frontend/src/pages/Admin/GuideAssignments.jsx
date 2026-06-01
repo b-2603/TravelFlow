@@ -67,14 +67,14 @@ export default function GuideAssignments() {
         <div className="mb-4">
           <h2 className="h4 mb-1">Điều phối hướng dẫn viên</h2>
           <p className="mb-0 text-muted">
-            Mỗi khi khách đặt tour, đợt khởi hành tương ứng sẽ hiện ở đây để admin phân công hướng dẫn viên theo ngày đi thực tế.
+            Các đợt khởi hành của tour đã duyệt sẽ hiện ở đây để admin phân công hướng dẫn viên theo ngày đi thực tế.
           </p>
         </div>
 
         <div className="row g-3">
           <div className="col-md-6 col-xl-3">
             <div className="rounded-4 border bg-light-subtle p-3">
-              <div className="small text-muted mb-2">Đợt khởi hành có booking</div>
+              <div className="small text-muted mb-2">Đợt khởi hành cần phân công</div>
               <div className="fs-5 fw-semibold">{groupedSummary.totalDepartures}</div>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default function GuideAssignments() {
         {isLoading ? (
           <div className="py-5 text-center text-muted">Đang tải danh sách điều phối...</div>
         ) : assignments.length === 0 ? (
-          <div className="py-5 text-center text-muted">Chưa có booking nào cần phân công hướng dẫn viên.</div>
+          <div className="py-5 text-center text-muted">Chưa có đợt khởi hành nào cần phân công hướng dẫn viên.</div>
         ) : (
           <div className="d-grid gap-3">
             {assignments.map((item) => {
