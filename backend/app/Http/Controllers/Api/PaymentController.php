@@ -18,6 +18,7 @@ use App\Services\PaymentService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
@@ -646,6 +647,11 @@ class PaymentController extends Controller
 
         if ($format === 'pdf') {
             try {
+                $pdfTempDir = storage_path('app/dompdf');
+                $pdfFontDir = $pdfTempDir.'/fonts';
+
+                File::ensureDirectoryExists($pdfFontDir);
+
                 $pdf = Pdf::loadView('pdf.finance-report', [
                     'month' => $data['month'],
                     'summary' => $data['summary'],
@@ -657,11 +663,17 @@ class PaymentController extends Controller
                     'generatedAt' => Carbon::now(),
                 ])->setPaper('a4')->setOptions([
                     'defaultFont' => 'DejaVu Sans',
-                    'isRemoteEnabled' => true,
+                    'chroot' => base_path(),
+                    'tempDir' => $pdfTempDir,
+                    'fontCache' => $pdfFontDir,
+                    'isRemoteEnabled' => false,
                     'isHtml5ParserEnabled' => true,
                 ]);
 
-                return $pdf->download($filename);
+                return response($pdf->output(), 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+                ]);
             } catch (\Throwable $exception) {
                 Log::error('Failed to generate finance report PDF.', [
                     'exception' => $exception,
