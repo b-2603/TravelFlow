@@ -38,9 +38,10 @@ export default function AdminLayout() {
   const title = titleFromPath(location.pathname);
   const workspacePath = getWorkspacePath(role);
   const avatar = resolveAvatarUrl(user?.avatar, user?.updated_at, user?.name || 'User');
+  const sidebarWidth = collapsed ? 84 : 260;
 
   return (
-    <div className="d-flex min-vh-100 bg-light tf-admin-shell">
+    <div className="d-flex min-vh-100 bg-light tf-admin-shell" style={{ '--tf-sidebar-width': `${sidebarWidth}px` }}>
       <Sidebar collapsed={collapsed} />
 
       <div className="flex-grow-1 min-w-0 tf-admin-content">
