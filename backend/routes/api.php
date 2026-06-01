@@ -13,7 +13,6 @@ use App\Http\Controllers\Api\NewsPromotionController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\TourController;
 use App\Http\Controllers\Api\UserController;
-use App\Models\Tour;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,50 +24,6 @@ Route::get('/health', function () {
             'status' => 'ok',
         ],
         'message' => 'API is reachable.',
-        'code' => 200,
-    ]);
-});
-
-Route::get('/debug/mongo', function () {
-    try {
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'tour_count' => Tour::count(),
-                'mongodb_uri_present' => filled(env('MONGODB_URI')),
-                'mongodb_database' => env('MONGODB_DATABASE', 'travel_management'),
-            ],
-            'message' => 'MongoDB connection is working.',
-            'code' => 200,
-        ]);
-    } catch (\Throwable $e) {
-        return response()->json([
-            'success' => false,
-            'data' => [
-                'exception_class' => get_class($e),
-                'exception_message' => $e->getMessage(),
-            ],
-            'message' => 'MongoDB debug failed.',
-            'code' => 500,
-        ], 500);
-    }
-});
-
-Route::get('/debug/env', function () {
-    $mongodbUri = env('MONGODB_URI') ?: getenv('MONGODB_URI') ?: ($_SERVER['MONGODB_URI'] ?? null);
-
-    return response()->json([
-        'success' => true,
-        'data' => [
-            'app_url' => config('app.url'),
-            'default_connection' => config('database.default'),
-            'mongodb_uri_present' => filled($mongodbUri),
-            'mongodb_uri_prefix' => $mongodbUri ? substr($mongodbUri, 0, 12) : null,
-            'mongodb_database' => config('database.connections.mongodb.database'),
-            'mongodb_dsn_present_in_config' => filled(config('database.connections.mongodb.dsn')),
-            'mongodb_host_present_in_config' => filled(config('database.connections.mongodb.host')),
-        ],
-        'message' => 'Environment debug loaded.',
         'code' => 200,
     ]);
 });
