@@ -54,6 +54,25 @@ Route::get('/debug/mongo', function () {
     }
 });
 
+Route::get('/debug/env', function () {
+    $mongodbUri = env('MONGODB_URI') ?: getenv('MONGODB_URI') ?: ($_SERVER['MONGODB_URI'] ?? null);
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'app_url' => config('app.url'),
+            'default_connection' => config('database.default'),
+            'mongodb_uri_present' => filled($mongodbUri),
+            'mongodb_uri_prefix' => $mongodbUri ? substr($mongodbUri, 0, 12) : null,
+            'mongodb_database' => config('database.connections.mongodb.database'),
+            'mongodb_dsn_present_in_config' => filled(config('database.connections.mongodb.dsn')),
+            'mongodb_host_present_in_config' => filled(config('database.connections.mongodb.host')),
+        ],
+        'message' => 'Environment debug loaded.',
+        'code' => 200,
+    ]);
+});
+
 Route::get('/bootstrap', function (Request $request) {
     return response()->json([
         'success' => true,
