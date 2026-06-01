@@ -15,7 +15,53 @@ const tabLabels = {
   images: 'Hình ảnh',
 };
 
+const categoryOptions = ['Biển', 'Văn hóa', 'Nghỉ dưỡng', 'Thiên nhiên', 'Ẩm thực', 'Gia đình', 'Cao cấp', 'Khám phá'];
+const destinationOptions = ['Đà Nẵng', 'Hà Nội', 'Phú Quốc', 'Đà Lạt', 'Huế', 'Quy Nhơn', 'Miền Tây', 'Côn Đảo', 'Mũi Né', 'Sa Pa', 'Nha Trang', 'Hội An'];
+const durationOptions = [2, 3, 4, 5, 6, 7];
+const maxPaxOptions = [10, 15, 20, 24, 30, 40];
+const priceOptions = [2500000, 3500000, 4900000, 6200000, 7900000, 9500000, 12500000];
+const bestTimeOptions = ['Tháng 1 đến tháng 4', 'Tháng 3 đến tháng 8', 'Tháng 5 đến tháng 9', 'Tháng 9 đến tháng 12', 'Quanh năm'];
+const meetingPointOptions = [
+  'Sân bay hoặc điểm hẹn trung tâm theo lịch khởi hành',
+  'Khách sạn trung tâm hoặc điểm hẹn theo lịch',
+  'Sân bay, bến xe hoặc khách sạn trung tâm theo lịch',
+  'Văn phòng công ty du lịch',
+  'Điểm hẹn do điều hành thông báo trước ngày khởi hành',
+];
+
+function futureDateString(daysFromNow) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().slice(0, 10);
+}
+
 const presetGroups = {
+  highlights: {
+    title: 'Chọn điểm nổi bật',
+    options: [
+      'Lịch trình cân bằng giữa tham quan và nghỉ ngơi',
+      'Khách sạn vị trí thuận tiện',
+      'Xe đưa đón riêng theo chương trình',
+      'Hướng dẫn viên đồng hành suốt tuyến',
+      'Bữa ăn đặc sản địa phương',
+      'Điểm check-in nổi bật',
+      'Phù hợp nhóm gia đình và công ty',
+      'Lịch trình nhẹ nhàng, dễ tham gia',
+      'Có thời gian tự do mua sắm và khám phá',
+      'Dịch vụ trọn gói, rõ chi phí',
+    ],
+  },
+  local_culture: {
+    title: 'Chọn văn hóa địa phương',
+    options: [
+      'Ẩm thực địa phương phong phú, dễ tiếp cận với nhiều khẩu vị',
+      'Người dân thân thiện, phù hợp trải nghiệm giao lưu nhẹ nhàng',
+      'Không gian văn hóa gắn với lịch sử và đời sống bản địa',
+      'Các khu chợ, phố đi bộ hoặc làng nghề phù hợp khám phá tự do',
+      'Nhiều điểm chụp ảnh đặc trưng theo mùa',
+      'Có các món đặc sản nên thử trong lịch trình',
+    ],
+  },
   included_services: {
     title: 'Chọn dịch vụ bao gồm',
     options: [
@@ -77,6 +123,97 @@ const presetGroups = {
     ],
   },
 };
+
+const quickTourTemplates = [
+  {
+    id: 'beach-family',
+    label: 'Biển nghỉ dưỡng gia đình',
+    values: {
+      title: 'Nghỉ dưỡng biển trọn gói',
+      category: 'Biển',
+      destination: 'Đà Nẵng',
+      duration_days: 4,
+      max_pax: 24,
+      price_per_person: 6200000,
+      description: 'Hành trình nghỉ dưỡng biển phù hợp gia đình và nhóm bạn, kết hợp tham quan các điểm nổi bật, thưởng thức ẩm thực địa phương và có thời gian tự do để nghỉ ngơi.',
+      highlights: ['Khách sạn vị trí thuận tiện', 'Điểm check-in nổi bật', 'Bữa ăn đặc sản địa phương', 'Dịch vụ trọn gói, rõ chi phí'],
+      destination_overview: 'Điểm đến có cảnh quan biển đẹp, nhiều điểm tham quan nổi bật và hệ thống dịch vụ du lịch phát triển, phù hợp cho khách muốn nghỉ dưỡng kết hợp khám phá.',
+      historical_background: 'Khu vực có quá trình phát triển du lịch lâu năm, kết hợp giữa cảnh quan tự nhiên, văn hóa địa phương và nhịp sống đô thị năng động.',
+      local_culture: ['Ẩm thực địa phương phong phú, dễ tiếp cận với nhiều khẩu vị', 'Người dân thân thiện, phù hợp trải nghiệm giao lưu nhẹ nhàng'],
+      best_time_to_visit: 'Tháng 3 đến tháng 8',
+      weather_notes: 'Nên chuẩn bị kem chống nắng, nón, kính râm và áo khoác nhẹ khi đi biển vào buổi chiều tối.',
+      included_services: ['Xe du lịch đời mới phục vụ theo chương trình', 'Khách sạn tiêu chuẩn theo lịch trình', 'Các bữa ăn theo chương trình', 'Vé tham quan theo lịch trình', 'Hướng dẫn viên tiếng Việt chuyên nghiệp', 'Bảo hiểm du lịch'],
+      excluded_services: ['Vé máy bay khứ hồi', 'Chi phí cá nhân ngoài chương trình', 'Đồ uống trong các bữa ăn', 'Phụ thu phòng đơn', 'VAT'],
+      suitable_for: ['Gia đình', 'Nhóm bạn', 'Cặp đôi', 'Khách thích nghỉ dưỡng', 'Khách thích biển đảo'],
+      travel_tips: ['Mang theo CCCD hoặc hộ chiếu bản gốc', 'Có mặt tại điểm tập trung trước giờ khởi hành 30 phút', 'Chuẩn bị kem chống nắng, nón và kính râm', 'Giữ gìn tư trang cá nhân tại nơi đông người'],
+      meeting_point: 'Sân bay hoặc điểm hẹn trung tâm theo lịch khởi hành',
+      itinerary: [
+        { day: 1, title: 'Đón khách và nhận phòng', description: 'Đón khách tại điểm hẹn, di chuyển về khách sạn, nhận phòng và dùng bữa tối địa phương.' },
+        { day: 2, title: 'Tham quan điểm nổi bật', description: 'Tham quan các điểm nổi bật trong chương trình, chụp ảnh và thưởng thức đặc sản.' },
+        { day: 3, title: 'Nghỉ dưỡng và tự do khám phá', description: 'Thời gian tự do nghỉ ngơi, tắm biển hoặc khám phá khu vực xung quanh.' },
+        { day: 4, title: 'Mua sắm và tiễn khách', description: 'Ăn sáng, mua sắm đặc sản, trả phòng và tiễn khách về điểm hẹn.' },
+      ],
+    },
+  },
+  {
+    id: 'culture-history',
+    label: 'Văn hóa - lịch sử',
+    values: {
+      title: 'Hành trình văn hóa lịch sử',
+      category: 'Văn hóa',
+      destination: 'Huế',
+      duration_days: 3,
+      max_pax: 20,
+      price_per_person: 4900000,
+      description: 'Tour dành cho khách yêu văn hóa, lịch sử và ẩm thực địa phương, lịch trình vừa phải, dễ tham gia và có hướng dẫn viên thuyết minh tại các điểm chính.',
+      highlights: ['Lịch trình nhẹ nhàng, dễ tham gia', 'Hướng dẫn viên đồng hành suốt tuyến', 'Bữa ăn đặc sản địa phương', 'Có thời gian tự do mua sắm và khám phá'],
+      destination_overview: 'Điểm đến nổi bật với di sản, kiến trúc, ẩm thực và đời sống địa phương đặc sắc, phù hợp cho hành trình tìm hiểu văn hóa.',
+      historical_background: 'Khu vực gắn với nhiều dấu ấn lịch sử, công trình kiến trúc và câu chuyện văn hóa được bảo tồn qua nhiều thế hệ.',
+      local_culture: ['Không gian văn hóa gắn với lịch sử và đời sống bản địa', 'Có các món đặc sản nên thử trong lịch trình'],
+      best_time_to_visit: 'Tháng 1 đến tháng 4 hoặc tháng 9 đến tháng 12',
+      weather_notes: 'Nên mang giày dễ đi bộ, áo khoác nhẹ và chuẩn bị dù mỏng trong mùa mưa.',
+      included_services: ['Xe du lịch đời mới phục vụ theo chương trình', 'Các bữa ăn theo chương trình', 'Vé tham quan theo lịch trình', 'Hướng dẫn viên tiếng Việt chuyên nghiệp', 'Nước suối trên xe'],
+      excluded_services: ['Chi phí cá nhân ngoài chương trình', 'Đồ uống trong các bữa ăn', 'Phụ thu phòng đơn', 'VAT'],
+      suitable_for: ['Gia đình', 'Người lớn tuổi', 'Khách yêu văn hóa - lịch sử', 'Khách công ty'],
+      travel_tips: ['Mang theo CCCD hoặc hộ chiếu bản gốc', 'Mang giày thể thao hoặc dép dễ di chuyển', 'Tuân thủ quy định tại điểm tham quan', 'Thông báo trước nếu có yêu cầu ăn chay hoặc dị ứng thực phẩm'],
+      meeting_point: 'Khách sạn trung tâm hoặc điểm hẹn theo lịch',
+      itinerary: [
+        { day: 1, title: 'Đón khách và tham quan trung tâm', description: 'Đón khách, dùng bữa trưa và tham quan các điểm văn hóa chính trong trung tâm.' },
+        { day: 2, title: 'Khám phá di sản', description: 'Tham quan các công trình lịch sử, nghe thuyết minh và dùng bữa đặc sản địa phương.' },
+        { day: 3, title: 'Mua đặc sản và tiễn khách', description: 'Tự do mua sắm, trả phòng và tiễn khách về điểm hẹn.' },
+      ],
+    },
+  },
+  {
+    id: 'mountain-nature',
+    label: 'Thiên nhiên - nghỉ dưỡng núi',
+    values: {
+      title: 'Nghỉ dưỡng thiên nhiên vùng cao',
+      category: 'Thiên nhiên',
+      destination: 'Đà Lạt',
+      duration_days: 3,
+      max_pax: 20,
+      price_per_person: 5200000,
+      description: 'Hành trình phù hợp khách muốn nghỉ dưỡng trong không khí mát mẻ, tham quan cảnh quan thiên nhiên, thưởng thức đặc sản và có lịch trình không quá dày.',
+      highlights: ['Lịch trình cân bằng giữa tham quan và nghỉ ngơi', 'Điểm check-in nổi bật', 'Khách sạn vị trí thuận tiện', 'Lịch trình nhẹ nhàng, dễ tham gia'],
+      destination_overview: 'Điểm đến có khí hậu mát mẻ, nhiều cảnh quan thiên nhiên, quán cà phê đẹp và hoạt động nghỉ dưỡng phù hợp nhiều độ tuổi.',
+      historical_background: 'Vùng du lịch phát triển từ lâu với dấu ấn kiến trúc, nông nghiệp địa phương và các khu nghỉ dưỡng trên cao nguyên.',
+      local_culture: ['Nhiều điểm chụp ảnh đặc trưng theo mùa', 'Các khu chợ, phố đi bộ hoặc làng nghề phù hợp khám phá tự do'],
+      best_time_to_visit: 'Tháng 11 đến tháng 4',
+      weather_notes: 'Nhiệt độ buổi tối có thể thấp, nên mang áo khoác và giày dễ di chuyển.',
+      included_services: ['Xe du lịch đời mới phục vụ theo chương trình', 'Khách sạn tiêu chuẩn theo lịch trình', 'Các bữa ăn theo chương trình', 'Vé tham quan theo lịch trình', 'Hướng dẫn viên tiếng Việt chuyên nghiệp'],
+      excluded_services: ['Vé máy bay khứ hồi', 'Chi phí cá nhân ngoài chương trình', 'Đồ uống trong các bữa ăn', 'Phụ thu phòng đơn'],
+      suitable_for: ['Gia đình', 'Cặp đôi', 'Người lớn tuổi', 'Khách thích nghỉ dưỡng', 'Khách thích khám phá'],
+      travel_tips: ['Mang áo khoác nhẹ cho buổi tối', 'Mang giày thể thao hoặc dép dễ di chuyển', 'Chuẩn bị thuốc cá nhân nếu cần', 'Không tự ý tách đoàn khi chưa báo hướng dẫn viên'],
+      meeting_point: 'Sân bay, bến xe hoặc khách sạn trung tâm theo lịch',
+      itinerary: [
+        { day: 1, title: 'Đón khách và nghỉ dưỡng', description: 'Đón khách, nhận phòng, tham quan nhẹ và dùng bữa tối.' },
+        { day: 2, title: 'Khám phá cảnh quan', description: 'Tham quan các điểm thiên nhiên, vườn hoa, nông trại hoặc quán cà phê theo chương trình.' },
+        { day: 3, title: 'Tự do mua sắm và tiễn khách', description: 'Mua đặc sản địa phương, trả phòng và tiễn khách.' },
+      ],
+    },
+  },
+];
 
 function appendFormData(formData, key, value) {
   if (Array.isArray(value)) {
@@ -223,6 +360,22 @@ export default function TourForm() {
     setPresetSelection([]);
   };
 
+  const applyQuickTemplate = (template, setFieldValue) => {
+    if (! template) return;
+
+    Object.entries(template.values).forEach(([field, value]) => {
+      setFieldValue(field, value);
+    });
+
+    setFieldValue('promotion_type', 'none');
+    setFieldValue('promotion_value', 0);
+    setFieldValue('status', 'draft');
+    setFieldValue('departures', [
+      { date: futureDateString(30), available_slots: template.values.max_pax, price_override: '', status: 'active', assigned_guide_id: '' },
+      { date: futureDateString(45), available_slots: template.values.max_pax, price_override: '', status: 'active', assigned_guide_id: '' },
+    ]);
+  };
+
   return (
     <div className="rounded-4 border bg-white p-4 shadow-sm">
       <div className="mb-4 d-flex justify-content-between align-items-center">
@@ -244,10 +397,10 @@ export default function TourForm() {
           promotion_value: editSeed?.promotion_value || 0,
           status: editSeed?.status || 'draft',
           description: editSeed?.description || '',
-          highlights: editSeed?.highlights?.length ? editSeed.highlights : [''],
+          highlights: editSeed?.highlights?.length ? editSeed.highlights : [],
           destination_overview: editSeed?.destination_overview || '',
           historical_background: editSeed?.historical_background || '',
-          local_culture: editSeed?.local_culture?.length ? editSeed.local_culture : [''],
+          local_culture: editSeed?.local_culture?.length ? editSeed.local_culture : [],
           best_time_to_visit: editSeed?.best_time_to_visit || '',
           weather_notes: editSeed?.weather_notes || '',
           included_services: editSeed?.included_services?.length ? editSeed.included_services : [],
@@ -279,13 +432,35 @@ export default function TourForm() {
 
             {activeTab === 'basic' && (
               <div className="row g-3">
+                <div className="col-12">
+                  <label className="form-label">Mẫu tour nhanh</label>
+                  <select
+                    className="form-select"
+                    defaultValue=""
+                    onChange={(event) => {
+                      const template = quickTourTemplates.find((item) => item.id === event.target.value);
+                      applyQuickTemplate(template, setFieldValue);
+                    }}
+                  >
+                    <option value="">Chọn mẫu để tự điền nội dung</option>
+                    {quickTourTemplates.map((template) => (
+                      <option key={template.id} value={template.id}>{template.label}</option>
+                    ))}
+                  </select>
+                </div>
                 <div className="col-md-6">
                   <label className="form-label">Tên tour</label>
-                  <Field name="title" className="form-control" />
+                  <Field name="title" className="form-control" placeholder="Tên tour có thể sửa sau khi chọn mẫu" />
                 </div>
                 <div className="col-md-3">
                   <label className="form-label">Danh mục</label>
-                  <Field name="category" className="form-control" />
+                  <Field as="select" name="category" className="form-select">
+                    <option value="">Chọn danh mục</option>
+                    {values.category && ! categoryOptions.includes(values.category) ? <option value={values.category}>{values.category}</option> : null}
+                    {categoryOptions.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </Field>
                 </div>
                 <div className="col-md-3">
                   <label className="form-label">Trạng thái</label>
@@ -296,55 +471,75 @@ export default function TourForm() {
                 </div>
                 <div className="col-md-4">
                   <label className="form-label">Điểm đến</label>
-                  <Field name="destination" className="form-control" />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Số ngày</label>
-                  <Field name="duration_days" type="number" className="form-control" />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Số khách tối đa</label>
-                  <Field name="max_pax" type="number" className="form-control" />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Giá gốc mỗi khách</label>
-                  <Field name="price_per_person" type="number" className="form-control" />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label">Khuyến mãi</label>
-                  <Field as="select" name="promotion_type" className="form-select">
-                    <option value="none">Không khuyến mãi</option>
-                    <option value="percent">Giảm theo %</option>
-                    <option value="fixed">Giảm số tiền cố định</option>
+                  <Field as="select" name="destination" className="form-select">
+                    <option value="">Chọn điểm đến</option>
+                    {values.destination && ! destinationOptions.includes(values.destination) ? <option value={values.destination}>{values.destination}</option> : null}
+                    {destinationOptions.map((destination) => (
+                      <option key={destination} value={destination}>{destination}</option>
+                    ))}
                   </Field>
                 </div>
                 <div className="col-md-4">
+                  <label className="form-label">Số ngày</label>
+                  <Field as="select" name="duration_days" className="form-select">
+                    {values.duration_days && ! durationOptions.includes(Number(values.duration_days)) ? <option value={values.duration_days}>{values.duration_days} ngày</option> : null}
+                    {durationOptions.map((duration) => (
+                      <option key={duration} value={duration}>{duration} ngày</option>
+                    ))}
+                  </Field>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Số khách tối đa</label>
+                  <Field as="select" name="max_pax" className="form-select">
+                    {values.max_pax && ! maxPaxOptions.includes(Number(values.max_pax)) ? <option value={values.max_pax}>{values.max_pax} khách</option> : null}
+                    {maxPaxOptions.map((maxPax) => (
+                      <option key={maxPax} value={maxPax}>{maxPax} khách</option>
+                    ))}
+                  </Field>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Giá gốc mỗi khách</label>
+                  <Field as="select" name="price_per_person" className="form-select">
+                    {values.price_per_person && ! priceOptions.includes(Number(values.price_per_person)) ? (
+                      <option value={values.price_per_person}>{Number(values.price_per_person).toLocaleString('vi-VN')} đ</option>
+                    ) : null}
+                    {priceOptions.map((price) => (
+                      <option key={price} value={price}>{price.toLocaleString('vi-VN')} đ</option>
+                    ))}
+                  </Field>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label">Khuyến mãi</label>
+                  <select
+                    name="promotion_type"
+                    className="form-select"
+                    value={values.promotion_type}
+                    onChange={(event) => {
+                      setFieldValue('promotion_type', event.target.value);
+                      if (event.target.value === 'none') setFieldValue('promotion_value', 0);
+                    }}
+                  >
+                    <option value="none">Không khuyến mãi</option>
+                    <option value="percent">Giảm theo %</option>
+                    <option value="fixed">Giảm số tiền cố định</option>
+                  </select>
+                </div>
+                <div className="col-md-4">
                   <label className="form-label">Giá trị khuyến mãi</label>
-                  <Field name="promotion_value" type="number" className="form-control" />
+                  <Field name="promotion_value" type="number" className="form-control" disabled={values.promotion_type === 'none'} />
                 </div>
                 <div className="col-12">
                   <label className="form-label">Mô tả</label>
-                  <Field as="textarea" name="description" rows="5" className="form-control" />
+                  <Field as="textarea" name="description" rows="5" className="form-control" placeholder="Chọn mẫu tour nhanh để tự điền mô tả, sau đó sửa lại nếu cần." />
                 </div>
                 <div className="col-12">
-                  <label className="form-label">Điểm nổi bật</label>
-                  <FieldArray name="highlights">
-                    {({ push, remove }) => (
-                      <div className="d-grid gap-2">
-                        {values.highlights.map((_, index) => (
-                          <div className="d-flex gap-2" key={index}>
-                            <Field name={`highlights.${index}`} className="form-control" />
-                            <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
-                              Xóa
-                            </button>
-                          </div>
-                        ))}
-                        <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
-                          Thêm điểm nổi bật
-                        </button>
-                      </div>
-                    )}
-                  </FieldArray>
+                  <PresetPickerPanel
+                    title="Điểm nổi bật"
+                    field="highlights"
+                    values={values}
+                    onOpen={openPresetModal}
+                    setFieldValue={setFieldValue}
+                  />
                 </div>
                 <div className="col-12">
                   <label className="form-label">Liên kết đối tác dịch vụ</label>
@@ -399,32 +594,27 @@ export default function TourForm() {
                   </div>
                 </div>
                 <div className="col-lg-6">
-                  <div className="rounded-3 border p-3 h-100">
-                    <h3 className="h6 mb-3">Văn hóa địa phương</h3>
-                    <FieldArray name="local_culture">
-                      {({ push, remove }) => (
-                        <div className="d-grid gap-2">
-                          {values.local_culture.map((_, index) => (
-                            <div className="d-flex gap-2" key={index}>
-                              <Field name={`local_culture.${index}`} className="form-control" />
-                              <button type="button" className="btn btn-outline-danger" onClick={() => remove(index)}>
-                                Xóa
-                              </button>
-                            </div>
-                          ))}
-                          <button type="button" className="btn btn-outline-primary" onClick={() => push('')}>
-                            Thêm mục
-                          </button>
-                        </div>
-                      )}
-                    </FieldArray>
-                  </div>
+                  <PresetPickerPanel
+                    title="Văn hóa địa phương"
+                    field="local_culture"
+                    values={values}
+                    onOpen={openPresetModal}
+                    setFieldValue={setFieldValue}
+                  />
                 </div>
                 <div className="col-lg-6">
                   <div className="rounded-3 border p-3 h-100 d-grid gap-3">
                     <div>
                       <h3 className="h6 mb-2">Thời điểm đẹp nhất để đi</h3>
-                      <Field name="best_time_to_visit" className="form-control" placeholder="Ví dụ: Tháng 3 đến tháng 8" />
+                      <Field as="select" name="best_time_to_visit" className="form-select">
+                        <option value="">Chọn thời điểm</option>
+                        {values.best_time_to_visit && ! bestTimeOptions.includes(values.best_time_to_visit) ? (
+                          <option value={values.best_time_to_visit}>{values.best_time_to_visit}</option>
+                        ) : null}
+                        {bestTimeOptions.map((item) => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </Field>
                     </div>
                     <div>
                       <h3 className="h6 mb-2">Ghi chú thời tiết</h3>
@@ -462,7 +652,15 @@ export default function TourForm() {
                 <div className="col-lg-6">
                   <div className="rounded-3 border p-3 h-100">
                     <h3 className="h6 mb-3">Điểm tập trung</h3>
-                    <Field name="meeting_point" className="form-control" placeholder="Ví dụ: Sân bay Đà Nẵng" />
+                    <Field as="select" name="meeting_point" className="form-select">
+                      <option value="">Chọn điểm tập trung</option>
+                      {values.meeting_point && ! meetingPointOptions.includes(values.meeting_point) ? (
+                        <option value={values.meeting_point}>{values.meeting_point}</option>
+                      ) : null}
+                      {meetingPointOptions.map((item) => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </Field>
                     <div className="form-text">Mô tả rõ địa điểm tập trung hoặc điểm đón khách.</div>
                   </div>
                 </div>
