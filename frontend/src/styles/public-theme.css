@@ -596,11 +596,23 @@ body {
 
 .tf-admin-shell {
   align-items: stretch;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .tf-sidebar {
   width: var(--tf-sidebar-width, 260px);
+  height: 100vh;
   min-height: 100vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+}
+
+.tf-admin-content {
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .tf-sidebar-nav .nav-link {
@@ -677,11 +689,22 @@ body {
 
   .tf-admin-shell {
     flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
   .tf-sidebar {
     width: 100%;
+    height: auto;
     min-height: auto;
+    overflow: visible;
+    position: static;
+  }
+
+  .tf-admin-content {
+    height: auto;
+    overflow: visible;
   }
 
   .tf-sidebar-nav {

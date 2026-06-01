@@ -43,7 +43,7 @@ export default function AdminLayout() {
     <div className="d-flex min-vh-100 bg-light tf-admin-shell">
       <Sidebar collapsed={collapsed} />
 
-      <div className="flex-grow-1 min-w-0">
+      <div className="flex-grow-1 min-w-0 tf-admin-content">
         <header className="tf-admin-header border-bottom px-3 px-md-4 py-3">
           <div className="tf-admin-header-body d-flex flex-column flex-xl-row justify-content-between gap-3">
             <div className="tf-admin-header-copy">
